@@ -1,6 +1,6 @@
 {
-    "name": "hauboutthatway",
-    "short_name": "hauboutthatway",
+    "name": "haumap",
+    "short_name": "haumap",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
