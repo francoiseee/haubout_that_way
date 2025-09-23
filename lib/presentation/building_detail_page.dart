@@ -33,12 +33,16 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
 
   // List of buildings that DON'T have classrooms
   final List<String> _nonAcademicBuildings = [
+    'Plaza De Corazon Building (Red Bldg.)', // Building 1
+    'St. Martha Hall Building',          // Building 2
+    'San Francisco De Javier Building (SFJ)', // Building 3
     'Warehouse & Carpentry',           // Building 5
     'St. Gabriel Hall Building (SGH)', // Building 6
     'Chapel of the Holy Guardian Angel', // Building 15
     'Immaculate Heart Gymnasium',      // Building 19
     'Immaculate Heart Gymnasium Annex', // Building 20
-    'Aureo Building',                  // Building 21
+    'Yellow Food Court',
+                     
   ];
 
   @override
@@ -100,9 +104,9 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       case 'Immaculate Heart Gymnasium Annex':
         return 'Annex building supporting gymnasium activities.';
       
-      case 'Aureo Building':
-        return 'University building serving various functions.';
-      
+      case 'Yellow Food Court':
+        return 'University 1st Canteen.';
+
       default:
         return 'This building is part of Holy Angel University campus. It serves various academic and administrative functions for students and faculty.';
     }
