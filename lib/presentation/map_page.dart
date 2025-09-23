@@ -17,7 +17,6 @@ class _MapPageState extends State<MapPage> {
     'Holy Angel University Main Bldg.',
     'Center for Kapampangan Studies Museum',
     'St. Joseph Hall',
-    'Aureo',
     'Covered Court',
     'Mamerto G. Nepomuceno Building (MGN)',
     'Geromin G. Nepomuceno Building (GGN)',
@@ -125,11 +124,7 @@ class _MapPageState extends State<MapPage> {
                   right: 100,
                   child: _buildMapMarker(context, 'Covered Court'),
                 ),
-                Positioned(
-                  bottom: 180,
-                  left: 150,
-                  child: _buildMapMarker(context, 'Aureo'),
-                ),
+                
               ],
             ),
           ),
