@@ -120,7 +120,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
         title: Text(
           'HAUbout That Way',
           style: TextStyle(
-            color: AppTheme.primaryYellow,
+            color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),

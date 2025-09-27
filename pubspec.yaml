@@ -26,5 +26,6 @@ flutter:
   assets:
     - assets/images/hau_logo.png
     - assets/images/campus_map.png
+    - assets/images/campus.jpg
 
   

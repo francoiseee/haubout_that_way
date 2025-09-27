@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:hau_navigation_app/presentation/visitor_admin_page.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -50,15 +49,31 @@ class _HomePageState extends State<HomePage> {
             onTap: () => _dismissKeyboard(context),
             child: Scaffold(
               key: _scaffoldKey,
-              backgroundColor: AppTheme.primaryRed,
               body: SafeArea(
                 top: true,
-                child: _buildBody(context, model),
+                child: _buildBodyWithGradient(context, model),
               ),
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildBodyWithGradient(BuildContext context, StartModel model) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppTheme.primaryRed, // Your primary red at top
+            Colors.black,        // Black at bottom
+          ],
+          stops: [0.3, 1.0], // Adjust fade position
+        ),
+      ),
+      child: _buildBody(context, model),
     );
   }
 
@@ -72,21 +87,30 @@ class _HomePageState extends State<HomePage> {
     }
 
     return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          // HAU Logo Section
-          _buildLogoSection(),
-          
-          // Welcome Text Section
-          _buildWelcomeTextSection(context),
-          
-          // Start Button Section
-          _buildStartButtonSection(model),
-          
-          // Error Message Section
-          if (model.errorMessage != null) _buildErrorSection(model),
-        ],
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height,
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            // HAU Logo Section
+            _buildLogoSection(),
+            
+            // Welcome Text Section
+            _buildWelcomeTextSection(context),
+            
+            // Spacer to push button to bottom
+            const Expanded(child: SizedBox()),
+            
+            // Start Button Section
+            _buildStartButtonSection(model),
+            
+            // Error Message Section
+            if (model.errorMessage != null) _buildErrorSection(model),
+            
+            // Bottom spacing
+            const SizedBox(height: 50),
+          ],
+        ),
       ),
     );
   }
@@ -96,44 +120,45 @@ class _HomePageState extends State<HomePage> {
   // ===========================================
 
   Widget _buildLogoSection() {
-    return const HauLogoWidget(
+    return const Padding(
       padding: EdgeInsets.only(top: 70.0),
+      child: HauLogoWidget(),
     );
   }
 
   Widget _buildWelcomeTextSection(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Welcome title
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 10, 0),
-          child: Text(
-            'Welcome to \nHAUbout That Way!',
-            style: Theme.of(context).textTheme.headlineSmall,
-            textAlign: TextAlign.center,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 40.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Welcome title
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20.0),
+            child: Text(
+              'Welcome to \nHAUbout That Way!',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
           ),
-        ),
-        
-        // App description
-        Padding(
-          padding: const EdgeInsets.fromLTRB(34, 30, 30, 0),
-          child: Text(
+          
+          // App description
+          Text(
             'Your ultimate guide to exploring Holy Angel University with ease. '
             'Find the quickest routes to classrooms, offices, and campus spots—'
-            'so you\'ll never feel lost again. Whether you\'re a freshman, visitor,'
+            'so you\'ll never feel lost again. Whether you\'re a freshman, visitor, '
             'or just discovering new corners of HAU, we\'ll help you get there the smart way.',
             textAlign: TextAlign.justify,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildStartButtonSection(StartModel model) {
     return Padding(
-      padding: const EdgeInsets.only(top: 100),
+      padding: const EdgeInsets.only(bottom: 50.0),
       child: ElevatedButton(
         onPressed: model.isLoading ? null : _handleStartButtonPress,
         child: model.isLoading 

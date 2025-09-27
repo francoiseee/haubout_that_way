@@ -85,7 +85,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
         title: Text(
           'HAUbout That Way',
           style: TextStyle(
-            color: AppTheme.primaryYellow,
+            color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -313,58 +313,66 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     ];
   }
 
-  List<Widget> _buildActionButtons() {
-    final buttons = <Widget>[];
-    
-    if (_editMode && widget.isAdmin) {
-      buttons.addAll([
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: _saveChanges,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryYellow,
-              foregroundColor: Colors.black,
-              minimumSize: const Size(double.infinity, 50),
-            ),
-            child: const Text(
-              'SAVE CHANGES',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    List<Widget> _buildActionButtons() {
+      final buttons = <Widget>[];
+      
+      if (_editMode && widget.isAdmin) {
+        buttons.addAll([
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: _saveChanges,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryYellow,
+                foregroundColor: Colors.black,
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              child: const Text(
+                'SAVE CHANGES',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
-        ),
-      ]);
-    }
-    
+        ]);
+      }
+      
     buttons.add(
       Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
-          onPressed: () {
-            // Handle navigation to this building
-            _showNavigationDialog();
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryYellow,
-            foregroundColor: Colors.black,
-            minimumSize: const Size(double.infinity, 50),
-          ),
-          child: const Text(
-            'NAVIGATE TO THIS BUILDING',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+        child: Container(
+          width: double.infinity,
+          height: 70,
+          child: ElevatedButton(
+            onPressed: () {
+              _showNavigationDialog();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryYellow,
+              foregroundColor: Colors.black,
+              padding: EdgeInsets.zero,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'NAVIGATE TO THIS BUILDING',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
-    
-    return buttons;
-  }
+      
+      return buttons;
+    }
 
   void _addNewOffice() {
     setState(() {

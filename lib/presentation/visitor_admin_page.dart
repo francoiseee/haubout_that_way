@@ -1,9 +1,8 @@
-// presentation/visitor_admin_page.dart
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/presentation/map_page.dart';
 import 'package:hau_navigation_app/presentation/admin_login_page.dart';
-
+import 'package:hau_navigation_app/widgets/hau_logo.dart';
 
 class VisitorAdminPage extends StatelessWidget {
   const VisitorAdminPage({super.key});
@@ -12,14 +11,26 @@ class VisitorAdminPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
-      appBar: AppBar(
-        title: Text(
-          'HAUbout That Way',
-          style: TextStyle(
-            color: AppTheme.primaryYellow,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+     appBar: AppBar(
+       title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            HauLogoWidget(
+              width: 40,
+              height: 40,
+              padding: EdgeInsets.zero,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'HAUbout That Way',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         backgroundColor: AppTheme.primaryRed,
@@ -29,65 +40,76 @@ class VisitorAdminPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildOptionButton(
-              context,
-              'Visitor',
-              Icons.person,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MapPage(isAdmin: false)),
-                );
-              },
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/campus.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Container(
+          color: Colors.black.withOpacity(0.5),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [              
+                  // Visitor Button
+                  _buildOptionButton(
+                    text: 'Visitor',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MapPage(isAdmin: false)),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // Admin Button
+                  _buildOptionButton(
+                    text: 'Admin',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AdminLoginPage()),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 30),
-            _buildOptionButton(
-              context,
-              'Admin',
-              Icons.admin_panel_settings,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AdminLoginPage()),
-                );
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildOptionButton(BuildContext context, String text, IconData icon, VoidCallback onPressed) {
+  Widget _buildOptionButton({
+    required String text,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: 200,
       height: 60,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryYellow,
+          backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
+          elevation: 5,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 24),
-            const SizedBox(width: 10),
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

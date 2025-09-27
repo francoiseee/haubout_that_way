@@ -41,7 +41,7 @@ class _OfficeListPageState extends State<OfficeListPage> {
         title: Text(
           'HAUbout That Way',
           style: TextStyle(
-            color: AppTheme.primaryYellow,
+            color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),

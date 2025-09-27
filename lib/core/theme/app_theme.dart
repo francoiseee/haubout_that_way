@@ -8,6 +8,19 @@ class AppTheme {
   static const Color textWhite = Colors.white;
   static const Color textBlack = Colors.black;
   
+  // Gradient constants
+  static const LinearGradient blackGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Colors.transparent,
+      Colors.black54,
+      Colors.black87,
+    ],
+    stops: [0.0, 0.5, 1.0],
+  );
+  
+
   // Theme data
   static ThemeData get lightTheme {
     return ThemeData(

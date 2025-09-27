@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/presentation/building_detail_page.dart';
+import 'package:hau_navigation_app/widgets/hau_logo.dart';
 
 
 
@@ -119,13 +120,25 @@ class _MapPageState extends State<MapPage> {
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
       appBar: AppBar(
-        title: Text(
-          'HAUbout That Way',
-          style: TextStyle(
-            color: AppTheme.primaryYellow,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+       title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            HauLogoWidget(
+              width: 40,
+              height: 40,
+              padding: EdgeInsets.zero,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'HAUbout That Way',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         backgroundColor: AppTheme.primaryRed,
