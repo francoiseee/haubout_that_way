@@ -1,4 +1,3 @@
-// presentation/home_page.dart
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/models/start_model.dart';
 import 'package:hau_navigation_app/widgets/hau_logo.dart';

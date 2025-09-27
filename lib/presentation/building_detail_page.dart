@@ -1,4 +1,3 @@
-// presentation/building_detail_page.dart (UPDATED - COMBINED)
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 
