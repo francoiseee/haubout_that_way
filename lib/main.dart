@@ -1,5 +1,6 @@
 // main.dart
 import 'package:flutter/material.dart';
+import 'package:hau_navigation_app/viewmodels/campus_route_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/core/routes/app_routes.dart';
