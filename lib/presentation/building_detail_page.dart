@@ -23,6 +23,7 @@ class BuildingDetailPage extends StatefulWidget {
 class _BuildingDetailPageState extends State<BuildingDetailPage> {
   bool _editMode = false;
   final TextEditingController _infoController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   late List<String> _offices;
   final List<String> _classrooms = [
     'Room 101', 'Room 102', 'Room 103', 'Room 104', 'Room 105',
@@ -32,16 +33,15 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
 
   // List of buildings that DON'T have classrooms
   final List<String> _nonAcademicBuildings = [
-    'Plaza De Corazon Building (Red Bldg.)', // Building 1
-    'St. Martha Hall Building',          // Building 2
+    'Plaza De Corazon Building (Red Bldg.)',  // Building 1
+    'St. Martha Hall Building',               // Building 2
     'San Francisco De Javier Building (SFJ)', // Building 3
-    'Warehouse & Carpentry',           // Building 5
-    'St. Gabriel Hall Building (SGH)', // Building 6
-    'Chapel of the Holy Guardian Angel', // Building 15
-    'Immaculate Heart Gymnasium',      // Building 19
-    'Immaculate Heart Gymnasium Annex', // Building 20
+    'Warehouse & Carpentry',                  // Building 5
+    'St. Gabriel Hall Building (SGH)',        // Building 6
+    'Chapel of the Holy Guardian Angel',      // Building 15
+    'Immaculate Heart Gymnasium',             // Building 19
+    'Immaculate Heart Gymnasium Annex',       // Building 20
     'Yellow Food Court',
-                     
   ];
 
   @override
@@ -49,6 +49,9 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     super.initState();
     _offices = List.from(widget.buildingOffices);
     _infoController.text = _getBuildingDescription(widget.buildingName);
+    _searchController.addListener(() {
+      setState(() {});
+    });
   }
 
   bool get _hasClassrooms => !_nonAcademicBuildings.contains(widget.buildingName);
@@ -116,7 +119,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'HAUbout That Way',
           style: TextStyle(
             color: Colors.white,
@@ -160,16 +163,26 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
+              controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search office or room...',
                 hintStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: Colors.white,
                 prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                        },
+                      )
+                    : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
+              onChanged: (val) => setState(() {}),
               style: const TextStyle(color: Colors.black),
             ),
           ),
@@ -267,6 +280,11 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   }
 
   List<Widget> _buildOfficesSection() {
+    final query = _searchController.text.toLowerCase().trim();
+    final filteredOffices = query.isEmpty
+        ? _offices
+        : _offices.where((o) => o.toLowerCase().contains(query)).toList();
+
     return [
       Row(
         children: [
@@ -288,14 +306,21 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       const SizedBox(height: 10),
       
       // Offices list
-      ..._offices.asMap().entries.map((entry) => ListTile(
+      if (filteredOffices.isEmpty && query.isNotEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12.0),
+          child: Text('No matching offices', style: TextStyle(color: Colors.grey)),
+        ),
+      ...filteredOffices.asMap().entries.map((entry) => ListTile(
         leading: const Icon(Icons.room, color: Colors.black),
         title: _editMode && widget.isAdmin
             ? TextField(
                 controller: TextEditingController(text: entry.value),
                 onChanged: (value) {
                   setState(() {
-                    _offices[entry.key] = value;
+                    // update the index in the original _offices list
+                    final originalIndex = _offices.indexWhere((o) => o == entry.value);
+                    if (originalIndex != -1) _offices[originalIndex] = value;
                   });
                 },
                 decoration: const InputDecoration(
@@ -317,6 +342,11 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   }
 
   List<Widget> _buildClassroomsSection() {
+    final query = _searchController.text.toLowerCase().trim();
+    final filteredClassrooms = query.isEmpty
+        ? _classrooms
+        : _classrooms.where((c) => c.toLowerCase().contains(query)).toList();
+
     return [
       Row(
         children: [
@@ -338,14 +368,21 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       const SizedBox(height: 10),
       
       // Classrooms list
-      ..._classrooms.asMap().entries.map((entry) => ListTile(
+      if (filteredClassrooms.isEmpty && query.isNotEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12.0),
+          child: Text('No matching classrooms', style: TextStyle(color: Colors.grey)),
+        ),
+      ...filteredClassrooms.asMap().entries.map((entry) => ListTile(
         leading: const Icon(Icons.class_, color: Colors.black),
         title: _editMode && widget.isAdmin
             ? TextField(
                 controller: TextEditingController(text: entry.value),
                 onChanged: (value) {
                   setState(() {
-                    _classrooms[entry.key] = value;
+                    // update the index in the original _classrooms list
+                    final originalIndex = _classrooms.indexWhere((c) => c == entry.value);
+                    if (originalIndex != -1) _classrooms[originalIndex] = value;
                   });
                 },
                 decoration: const InputDecoration(
@@ -451,23 +488,24 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   }
 
   void _showNavigationDialog() {
+    final pageContext = context;
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
+      context: pageContext,
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Navigation'),
           content: Text('Navigate to ${widget.buildingName}?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('CANCEL'),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Navigating to ${widget.buildingName}...')),
-                );
+                // Close the dialog
+                Navigator.pop(dialogContext);
+                // Pop the BuildingDetailPage and return the building name so the map can compute a route
+                Navigator.pop(pageContext, widget.buildingName);
               },
               child: const Text('START NAVIGATION'),
             ),
@@ -480,6 +518,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   @override
   void dispose() {
     _infoController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 }

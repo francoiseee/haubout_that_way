@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildLogoSection() {
     return const Padding(
-      padding: EdgeInsets.only(top: 70.0),
+      padding: EdgeInsets.only(top: 0.0),
       child: HauLogoWidget(),
     );
   }
