@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/presentation/map_page.dart';
 import 'package:hau_navigation_app/widgets/hau_logo.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:hau_navigation_app/auth/auth_service.dart';
 
 class AdminLoginPage extends StatefulWidget {
   const AdminLoginPage({super.key});
@@ -11,27 +13,41 @@ class AdminLoginPage extends StatefulWidget {
 }
 
 class _AdminLoginPageState extends State<AdminLoginPage> {
+  final AuthService _authService = AuthService();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _idController = TextEditingController();
   bool _isLoading = false;
 
-  void _handleLogin() {
+  void _handleLogin() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Simulate login process
-    Future.delayed(const Duration(seconds: 1), () {
+    final email = _emailController.text.trim();
+    final password = _idController.text.trim();
+
+    try {
+      final response = await _authService.signInWithEmailPassword(email, password);
+
+      if (response.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MapPage(isAdmin: true)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login failed. Please check your credentials.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
       setState(() {
         _isLoading = false;
       });
-      
-      // Navigate to map page after successful login (as admin)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MapPage(isAdmin: true)),
-      );
-    });
+    }
   }
 
   @override
