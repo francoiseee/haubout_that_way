@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
+import 'package:hau_navigation_app/widgets/custom_app_bar.dart';
 
 
 
@@ -42,6 +43,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     'Immaculate Heart Gymnasium',             // Building 19
     'Immaculate Heart Gymnasium Annex',       // Building 20
     'Yellow Food Court',
+    ' Entrance'
   ];
 
   @override
@@ -58,6 +60,9 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
 
   String _getBuildingDescription(String buildingName) {
     switch (buildingName) {
+      case ' Entrance':
+        return 'Main entrance gate of Holy Angel University. First point of contact for visitors with security checkpoint and information services.';
+      
       case 'St. Joseph Hall Building (SJH)':
         return 'Main academic building housing School of Education, Arts and Sciences, and Computing Dean\'s Offices. Contains the Academic Hall.';
       
@@ -118,22 +123,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
-      appBar: AppBar(
-        title: const Text(
-          'HAUbout That Way',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: AppTheme.primaryRed,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: CustomAppBar(
         actions: widget.isAdmin ? [
           if (!_editMode)
             IconButton(
@@ -201,8 +191,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
             ),
           ),
           
-          const SizedBox(height: 16),
-          
           // Building content
           Expanded(
             child: Container(
@@ -231,6 +219,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                         ? TextField(
                             controller: _infoController,
                             maxLines: 4,
+                            style: const TextStyle(color: Colors.black),
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(),
                               hintText: 'Enter building information',
@@ -316,6 +305,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
         title: _editMode && widget.isAdmin
             ? TextField(
                 controller: TextEditingController(text: entry.value),
+                style: const TextStyle(color: Colors.black),
                 onChanged: (value) {
                   setState(() {
                     // update the index in the original _offices list
@@ -378,6 +368,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
         title: _editMode && widget.isAdmin
             ? TextField(
                 controller: TextEditingController(text: entry.value),
+                style: const TextStyle(color: Colors.black),
                 onChanged: (value) {
                   setState(() {
                     // update the index in the original _classrooms list
@@ -405,7 +396,8 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     final buttons = <Widget>[];
     
     if (_editMode && widget.isAdmin) {
-      buttons.addAll([
+      // Show Save Changes button when in edit mode
+      buttons.add(
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
@@ -424,32 +416,34 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
             ),
           ),
         ),
-      ]);
-    }
-    
-    buttons.add(
-      Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
-          onPressed: () {
-            // Handle navigation to this building
-            _showNavigationDialog();
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryYellow,
-            foregroundColor: Colors.black,
-            minimumSize: const Size(double.infinity, 50),
-          ),
-          child: const Text(
-            'NAVIGATE TO THIS BUILDING',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+      );
+    } else {
+      // Show Navigate button when NOT in edit mode
+      buttons.add(
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ElevatedButton(
+            onPressed: () {
+              // Handle navigation to this building - directly start navigation
+              Navigator.pop(context, widget.buildingName);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryYellow,
+              foregroundColor: Colors.black,
+              minimumSize: const Size(double.infinity, 50),
+            ),
+            child: const Text(
+              'NAVIGATE TO THIS BUILDING',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    }
     
     return buttons;
   }
@@ -484,34 +478,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Changes saved successfully')),
-    );
-  }
-
-  void _showNavigationDialog() {
-    final pageContext = context;
-    showDialog(
-      context: pageContext,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Navigation'),
-          content: Text('Navigate to ${widget.buildingName}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('CANCEL'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Close the dialog
-                Navigator.pop(dialogContext);
-                // Pop the BuildingDetailPage and return the building name so the map can compute a route
-                Navigator.pop(pageContext, widget.buildingName);
-              },
-              child: const Text('START NAVIGATION'),
-            ),
-          ],
-        );
-      },
     );
   }
 
