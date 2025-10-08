@@ -26,22 +26,67 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     final email = _emailController.text.trim();
     final password = _idController.text.trim();
 
+    //Empty field validation
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields.')),
+      );
+      return;
+    }
+
+    //Domain validation
+    final allowedDomains = ['@gmail.com', '@hau.edu.ph'];
+    final isValidEmail = allowedDomains.any((domain) => email.endsWith(domain));
+
+    if (!isValidEmail) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Invalid email domain. Use an allowed institutional email.'),
+        ),
+      );
+      return;
+    }
+
     try {
-      final response = await _authService.signInWithEmailPassword(email, password);
+      //Attempt login
+      final response =
+          await _authService.signInWithEmailPassword(email, password);
 
       if (response.user != null) {
+        // Success
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MapPage(isAdmin: true)),
         );
       } else {
+        //No user returned — invalid credentials
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login failed. Please check your credentials.')),
+          const SnackBar(
+              content: Text('Invalid email or password. Please try again.')),
         );
       }
-    } catch (e) {
+    } on AuthException catch (e) {
+      //Specific Supabase auth errors (if your AuthService throws AuthException)
+      String errorMessage = 'Login failed. Please try again.';
+
+      if (e.message.contains('Invalid login credentials')) {
+        errorMessage = 'Incorrect email or password.';
+      } else if (e.message.contains('Email not confirmed')) {
+        errorMessage = 'Please verify your email before logging in.';
+      } else if (e.message.contains('Invalid email')) {
+        errorMessage = 'That email is not registered.';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      //Catch-all for anything else
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unexpected error: ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -55,7 +100,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
       appBar: AppBar(
-       title: Row(
+        title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -126,7 +171,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        
+
                         // Email field
                         TextField(
                           controller: _emailController,
@@ -138,13 +183,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
                           ),
                           style: const TextStyle(color: Colors.black),
                           keyboardType: TextInputType.emailAddress,
                         ),
                         const SizedBox(height: 20),
-                        
+
                         // ID title
                         Text(
                           'Enter your employee id:',
@@ -154,7 +200,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        
+
                         // ID field
                         TextField(
                           controller: _idController,
@@ -166,13 +212,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
                           ),
                           style: const TextStyle(color: Colors.black),
                           obscureText: true,
                         ),
                         const SizedBox(height: 30),
-                        
+
                         // Login button
                         SizedBox(
                           width: 200,
@@ -194,7 +241,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.black),
                                     ),
                                   )
                                 : const Text(
