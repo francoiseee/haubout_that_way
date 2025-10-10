@@ -1242,15 +1242,7 @@ class _MapPageState extends State<MapPage> {
             angle: _isFollowingUser ? _currentHeading * math.pi / 180 : 0,
             child: Column(
               children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryYellow,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
+                _buildBuildingMarkerIcon(building['name'] as String),
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1552,6 +1544,89 @@ class _MapPageState extends State<MapPage> {
       // The _computePathFromCurrentTo method will handle waypoint mapping internally
       _computePathFromCurrentTo(result);
     }
+  }
+
+  // Resolve the asset path for a building's logo in assets/building_logo
+  String? _buildingLogoAsset(String fullName) {
+    // Use contains to match names that include abbreviations in parentheses
+    if (fullName.contains('Plaza De Corazon')) return 'assets/building_logo/Plaza De Corazon Building.png';
+    if (fullName.contains('St. Martha Hall')) return 'assets/building_logo/St. Martha Hall Building.png';
+    if (fullName.contains('San Francisco De Javier')) return 'assets/building_logo/San Francisco De Javier Building.png';
+    if (fullName.contains('St. Therese of Liseux')) return 'assets/building_logo/St. Therese of Liseux Building.png';
+    if (fullName.contains('Warehouse')) return 'assets/building_logo/WareHouse and Carpentry.png';
+    if (fullName.contains('St. Gabriel Hall')) return 'assets/building_logo/St. Gabriel Hall Building.png';
+    if (fullName.contains('St. Raphael Hall')) return 'assets/building_logo/St. Raphael Hall Building.png';
+    if (fullName.contains('St. Michael Hall')) return 'assets/building_logo/St. Michael Hall Building.png';
+    if (fullName.contains('Geromin G. Nepomuceno')) return 'assets/building_logo/Geromin G. Nepomuceno Building.png';
+    if (fullName.contains('Peter G. Nepomuceno')) return 'assets/building_logo/Peter G. Nepomuceno Building.png';
+    if (fullName.contains('Don Juan D. Nepomuceno')) return 'assets/building_logo/Don Juan D. Nepomuceno Building.png';
+    if (fullName.contains('Archbishop Pedro Santos')) return 'assets/building_logo/Archbishop Pedro Santos Building.png';
+    if (fullName.contains('Mamerto G. Nepomuceno')) return 'assets/building_logo/Mamerto G. Nepomuceno Building.png';
+    if (fullName.contains('Chapel of the Holy Guardian Angel') || fullName.contains('Chapel Of The Holy Guardian Angel')) {
+      return 'assets/building_logo/Chapel Of The Holy Guardian Angel.png';
+    }
+    if (fullName.contains('Sister Josefina Nepomuceno Formation Center')) {
+      return 'assets/building_logo/Sister Josefina Nepomuceno Formation Center.png';
+    }
+    if (fullName.contains('St. Joseph Hall')) return 'assets/building_logo/St. Joseph Hall Building.png';
+    if (fullName.contains('Sacred Heart')) return 'assets/building_logo/Sacred Heart Building.png';
+    if (fullName.contains('Covered Court')) return 'assets/building_logo/Covered Court.png';
+    if (fullName.contains('Immaculate Heart Gymnasium Annex')) return 'assets/building_logo/Immaculate Heart Gymnasium Annex.png';
+    if (fullName.contains('Immaculate Heart Gymnasium')) return 'assets/building_logo/Immaculate Heart Gymnasium.png';
+    if (fullName.contains('Yellow Food Court')) return 'assets/building_logo/Yellow Food Court.png';
+    return null;
+  }
+
+  // Build a marker widget using the building logo with a circular style and white border
+  Widget _buildBuildingMarkerIcon(String buildingName) {
+    final asset = _buildingLogoAsset(buildingName);
+    if (asset == null) {
+      // Fallback to current yellow dot style
+      return Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: AppTheme.primaryYellow,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        asset,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback to yellow dot if asset not found
+          return Container(
+            color: AppTheme.primaryYellow,
+            child: const Icon(Icons.location_on, color: Colors.white),
+          );
+        },
+      ),
+    );
   }
 
   String _getAbbreviatedName(String fullName) {
