@@ -46,6 +46,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     'Room 305',
   ];
 
+  //test push to nikko
   // List of buildings that DON'T have classrooms
   final List<String> _nonAcademicBuildings = [
     'Plaza De Corazon Building (Red Bldg.)', // Building 1
