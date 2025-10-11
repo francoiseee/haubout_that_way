@@ -3,7 +3,7 @@ import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/presentation/map_page.dart';
 import 'package:hau_navigation_app/widgets/hau_logo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hau_navigation_app/auth/auth_service.dart';
+import 'package:hau_navigation_app/supabase_services/auth_service.dart';
 
 class AdminLoginPage extends StatefulWidget {
   const AdminLoginPage({super.key});
