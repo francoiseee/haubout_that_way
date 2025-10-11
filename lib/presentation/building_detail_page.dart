@@ -119,6 +119,31 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     }
   }
 
+  String _photoFor(String name) {
+    final key = name.trim().toLowerCase();
+    const map = {
+      'entrance': 'assets/building_actualpic/entrance.jpg',
+      'st. joseph hall building (sjh)': 'assets/building_actualpic/sjh.jpg',
+      'don juan d. nepomuceno building (djdn / main bldg.)': 'assets/building_actualpic/djdn.jpg',
+      'san francisco de javier building (sfj)': 'assets/building_actualpic/sfj.jpg',
+      'plaza de corazon building (red bldg.)': 'assets/building_actualpic/red.jpg',
+      'sacred heart building (sh)': 'assets/building_actualpic/sh.png',
+      'peter g. nepomuceno building (pgn)': 'assets/building_actualpic/pgn.jpg',
+      'mamerto g. nepomuceno building (mgn)': 'assets/building_actualpic/mgn.png',
+      'geromin g. nepomuceno building (ggn)': 'assets/building_actualpic/ggn.png',
+      'st. martha hall building': 'assets/building_actualpic/st_martha.jpg',
+      'st. therese of liseux building (stl)': 'assets/building_actualpic/stl.jpg',
+      'covered court': 'assets/building_actualpic/covered_court.jpg',
+      'warehouse & carpentry': 'assets/building_actualpic/warehouse.jpg',
+      'st. gabriel hall building (sgh)': 'assets/building_actualpic/sgh.jpg',
+      'chapel of the holy guardian angel': 'assets/building_actualpic/chapel.jpg',
+      'immaculate heart gymnasium': 'assets/building_actualpic/gym.png',
+      'immaculate heart gymnasium annex': 'assets/building_actualpic/gym_annex.jpg',
+      'yellow food court': 'assets/building_actualpic/yellow_food_court.jpg',
+    };
+    return map[key] ?? 'assets/building_actualpic/main-entrance.jpg';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -231,6 +256,33 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                             textAlign: TextAlign.justify,
                           ),
                     
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Image.asset(
+                          _photoFor(widget.buildingName),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stack) => Container(
+                            color: const Color(0xFFEFEFEF),
+                            alignment: Alignment.center,
+                            child: const Text(
+                              'Photo not available',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Actual Building – ${widget.buildingName}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     
                     // Offices section (only show if building has offices)

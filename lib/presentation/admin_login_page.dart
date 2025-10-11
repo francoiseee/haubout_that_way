@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/presentation/map_page.dart';
-import 'package:hau_navigation_app/widgets/hau_logo.dart';
+import 'package:hau_navigation_app/widgets/custom_app_bar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hau_navigation_app/auth/auth_service.dart';
 
@@ -99,35 +99,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
-      appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            HauLogoWidget(
-              width: 40,
-              height: 40,
-              padding: EdgeInsets.zero,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'HAUbout That Way',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        centerTitle: true,
-        backgroundColor: AppTheme.primaryRed,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      appBar: const CustomAppBar(),
       body: Container(
         width: double.infinity,
         height: double.infinity,
