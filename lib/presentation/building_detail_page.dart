@@ -122,24 +122,24 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   String _photoFor(String name) {
     final key = name.trim().toLowerCase();
     const map = {
-      'entrance': 'assets/building_actualpic/entrance.jpg',
-      'st. joseph hall building (sjh)': 'assets/building_actualpic/sjh.jpg',
-      'don juan d. nepomuceno building (djdn / main bldg.)': 'assets/building_actualpic/djdn.jpg',
-      'san francisco de javier building (sfj)': 'assets/building_actualpic/sfj.jpg',
-      'plaza de corazon building (red bldg.)': 'assets/building_actualpic/red.jpg',
+      'entrance': 'assets/building_actualpic/entrance.png',
+      'st. joseph hall building (sjh)': 'assets/building_actualpic/sjh.png',
+      'don juan d. nepomuceno building (djdn / main bldg.)': 'assets/building_actualpic/djdn.png',
+      'san francisco de javier building (sfj)': 'assets/building_actualpic/sfj.png',
+      'plaza de corazon building (red bldg.)': 'assets/building_actualpic/red.png',
       'sacred heart building (sh)': 'assets/building_actualpic/sh.png',
-      'peter g. nepomuceno building (pgn)': 'assets/building_actualpic/pgn.jpg',
+      'peter g. nepomuceno building (pgn)': 'assets/building_actualpic/pgn.png',
       'mamerto g. nepomuceno building (mgn)': 'assets/building_actualpic/mgn.png',
       'geromin g. nepomuceno building (ggn)': 'assets/building_actualpic/ggn.png',
-      'st. martha hall building': 'assets/building_actualpic/st_martha.jpg',
-      'st. therese of liseux building (stl)': 'assets/building_actualpic/stl.jpg',
+      'st. martha hall building': 'assets/building_actualpic/st_martha.png',
+      'st. therese of liseux building (stl)': 'assets/building_actualpic/stl.png',
       'covered court': 'assets/building_actualpic/covered_court.jpg',
-      'warehouse & carpentry': 'assets/building_actualpic/warehouse.jpg',
-      'st. gabriel hall building (sgh)': 'assets/building_actualpic/sgh.jpg',
-      'chapel of the holy guardian angel': 'assets/building_actualpic/chapel.jpg',
+      'warehouse & carpentry': 'assets/building_actualpic/warehouse.png',
+      'st. gabriel hall building (sgh)': 'assets/building_actualpic/sgh.png',
+      'chapel of the holy guardian angel': 'assets/building_actualpic/chapel.png',
       'immaculate heart gymnasium': 'assets/building_actualpic/gym.png',
-      'immaculate heart gymnasium annex': 'assets/building_actualpic/gym_annex.jpg',
-      'yellow food court': 'assets/building_actualpic/yellow_food_court.jpg',
+      'immaculate heart gymnasium annex': 'assets/building_actualpic/gym_annex.png',
+      'yellow food court': 'assets/building_actualpic/yellowcanteen.png',
     };
     return map[key] ?? 'assets/building_actualpic/main-entrance.jpg';
   }
