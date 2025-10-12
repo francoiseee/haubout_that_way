@@ -133,7 +133,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       'geromin g. nepomuceno building (ggn)': 'assets/building_actualpic/ggn.png',
       'st. martha hall building': 'assets/building_actualpic/st_martha.png',
       'st. therese of liseux building (stl)': 'assets/building_actualpic/stl.png',
-      'covered court': 'assets/building_actualpic/covered_court.jpg',
+      'covered court': 'assets/building_actualpic/covered_court.png',
       'warehouse & carpentry': 'assets/building_actualpic/warehouse.png',
       'st. gabriel hall building (sgh)': 'assets/building_actualpic/sgh.png',
       'chapel of the holy guardian angel': 'assets/building_actualpic/chapel.png',
