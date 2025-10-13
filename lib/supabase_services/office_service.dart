@@ -25,4 +25,27 @@ class OfficeService {
 
   return data.map((item) => Office.fromMap(item)).toList();
   }
+
+  // Update office name
+  Future<void> updateOfficeName(String officeId, String newName) async {
+  await SupabaseService.client
+      .from('offices')
+      .update({'name': newName})
+      .eq('id', officeId);
+}
+
+// Add new office
+Future<void> addOffice(String name, String buildingCode) async {
+  await SupabaseService.client
+      .from('offices')
+      .insert({'name': name, 'building_code': buildingCode});
+}
+
+// Delete office
+Future<void> deleteOffice(String officeId) async {
+  await SupabaseService.client
+      .from('offices')
+      .delete()
+      .eq('id', officeId);
+}
 }

@@ -28,6 +28,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   bool _editMode = false;
   String _error = '';
   List<Office> _officesList = [];
+  List<String> _deletedOfficeIds = [];
   final TextEditingController _infoController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final List<String> _classrooms = [
@@ -458,17 +459,21 @@ Future<void> _fetchOffices(String buildingCode) async {
     return buttons;
   }
 
-  void _addNewOffice() {
-    setState(() {
-      _officesList.add(Office(id: "", name: 'New Office', buildingCode: _building?.buildingCode ?? ''));
-    });
+  void _addNewOffice() async {
+  setState(() {
+    _officesList.add(Office(id: '', name: 'New Office', buildingCode: _building?.buildingCode ?? ''));
+  });
   }
 
-  void _removeOffice(int index) {
-    setState(() {
-      _officesList.removeAt(index);
-    });
-  }
+  void _removeOffice(int index) async {
+  setState(() {
+    final office = _officesList[index];
+    if (office.id.isNotEmpty) {
+      _deletedOfficeIds.add(office.id);
+    }
+    _officesList.removeAt(index);
+  });
+}
 
   void _addNewClassroom() {
     setState(() {
@@ -482,14 +487,45 @@ Future<void> _fetchOffices(String buildingCode) async {
     });
   }
 
-  void _saveChanges() {
+  void _saveChanges() async {
+  try {
+    if (_building != null) {
+      await BuildingService().updateBuildingDescription(
+        _building!.buildingId,
+        _infoController.text,
+      );
+    // Update Office Names
+    }
+    for (final office in _officesList) {
+      if (office.id.isNotEmpty) {
+        await OfficeService().updateOfficeName(office.id, office.name);
+      }
+    }
+
+    // Add new offices
+    for (final office in _officesList.where((o) => o.id.isEmpty)) {
+      await OfficeService().addOffice(office.name, office.buildingCode);
+    }
+    
+    // Delete removed offices
+    for (final id in _deletedOfficeIds) {
+      await OfficeService().deleteOffice(id);
+    }
+    _deletedOfficeIds.clear();
+    await _fetchOffices(_building!.buildingCode); // Refresh list
+
     setState(() {
       _editMode = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Changes saved successfully')),
     );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to save changes: $e')),
+    );
   }
+}
 
   @override
   void dispose() {
