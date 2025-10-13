@@ -67,7 +67,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   @override
   void initState() {
     super.initState();
-    print('Building code passed: ${widget.buildingName}'); // Debug print
     _fetchBuildingDetails();
     _searchController.addListener(() {
       setState(() {});
@@ -506,7 +505,7 @@ Future<void> _fetchOffices(String buildingCode) async {
     for (final office in _officesList.where((o) => o.id.isEmpty)) {
       await OfficeService().addOffice(office.name, office.buildingCode);
     }
-    
+
     // Delete removed offices
     for (final id in _deletedOfficeIds) {
       await OfficeService().deleteOffice(id);

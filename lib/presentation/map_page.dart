@@ -67,7 +67,7 @@ class _MapPageState extends State<MapPage> {
 
   final List<Map<String, dynamic>> _buildings = [
     {
-      'name': ' Entrance',
+      'name': 'Entrance',
       'offices': ['Security Office', 'Information Desk'],
     },
     {
@@ -819,7 +819,7 @@ class _MapPageState extends State<MapPage> {
       // Show a small stop-navigation button while in navigation mode
       persistentFooterButtons: _isNavigating
           ? [
-              Expanded(
+              Container(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: ElevatedButton.icon(
@@ -1049,7 +1049,7 @@ class _MapPageState extends State<MapPage> {
     // Building locations - coordinates will be updated from waypoints if mapped
     final List<Map<String, dynamic>> buildingLocations = [
       {
-        'name': ' Entrance',
+        'name': 'Entrance',
         'lat': 15.134110,
         'lng': 120.591074,
       },
@@ -1432,19 +1432,25 @@ class _MapPageState extends State<MapPage> {
 
   // Compute shortest path from current location to a building name and set _computedPath
   void _computePathFromCurrentTo(String buildingName) {
+    
     if (_currentPosition == null) {
       // No user location; cannot compute path
       return;
     }
 
     // Find the target waypoint key for this building (if mapped)
-    String targetNode = buildingName;
+    String targetNode = 'wp_Entrance'; // Default to Entrance if not found
     try {
-      final mapped = wpdata.buildingToWaypoints[buildingName];
+      String normalizedName = buildingName.trim();
+      final mapped = wpdata.buildingToWaypoints[normalizedName];
       if (mapped != null && mapped.isNotEmpty) {
         targetNode = mapped.first; // Use the mapped waypoint key
       }
+
     } catch (_) {}
+
+    debugPrint('All graph node keys: ${_graphNodes.keys.toList()}');
+    debugPrint('Target node for $buildingName: $targetNode');
 
     // Ensure target node exists in graph
     if (!_graphNodes.containsKey(targetNode)) {
@@ -1472,7 +1478,7 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    debugPrint('Computing path from $nearestNodeToUser to $targetNode');
+    debugPrint('Computing nearest path from $nearestNodeToUser to $targetNode');
     final nodePath = _dijkstra(nearestNodeToUser, targetNode);
     
     if (nodePath.isEmpty) {

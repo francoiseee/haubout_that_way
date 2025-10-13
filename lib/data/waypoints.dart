@@ -268,7 +268,7 @@ final Map<String, List<String>> buildingToWaypoints = {
   'Covered Court': ['wp_Covered_Court'],
   'Immaculate Heart Gymnasium': ['wp_IH_Gym'],
   'Immaculate Heart Gymnasium Annex': ['wp_Annex'],
-  ' Entrance': ['wp_Entrance'],
+  'Entrance': ['wp_Entrance']
 };
 
 // You can edit `initialGraphNodes` to add new waypoint nodes and the
