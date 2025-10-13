@@ -5,7 +5,7 @@ class OfficeService {
   // Fetch all offices
   Future<List<Office>> fetchOffices() async {
     final data = await SupabaseService.client
-        .from('office')
+        .from('offices')
         .select()
         .then((value) => value as List<dynamic>);
 
@@ -14,12 +14,15 @@ class OfficeService {
 
   // Fetch offices by building code
   Future<List<Office>> fetchOfficesByBuildingCode(String buildingCode) async {
-    final data = await SupabaseService.client
-        .from('office')
-        .select()
-        .eq('building_code', buildingCode)
-        .then((value) => value as List<dynamic>);
+  final response = await SupabaseService.client
+      .from('offices')
+      .select()
+      .eq('building_code', buildingCode);
 
-    return data.map((item) => Office.fromMap(item as Map<String, dynamic>)).toList();
+  if (response == null || (response is List && response.isEmpty)) return [];
+
+  final data = (response as List).cast<Map<String, dynamic>>();
+
+  return data.map((item) => Office.fromMap(item)).toList();
   }
 }

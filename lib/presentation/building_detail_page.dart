@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/widgets/custom_app_bar.dart';
 import 'package:hau_navigation_app/models/building.dart';
+import 'package:hau_navigation_app/models/office.dart';
 import 'package:hau_navigation_app/supabase_services/building_service.dart';
+import 'package:hau_navigation_app/supabase_services/office_service.dart';
 
 // Update widget to accept buildingCode
 class BuildingDetailPage extends StatefulWidget {
@@ -23,11 +25,11 @@ class BuildingDetailPage extends StatefulWidget {
 class _BuildingDetailPageState extends State<BuildingDetailPage> {
   Building? _building;
   bool _isLoading = true;
-  String _error = '';
   bool _editMode = false;
+  String _error = '';
+  List<Office> _officesList = [];
   final TextEditingController _infoController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  late List<String> _offices;
   final List<String> _classrooms = [
     'Room 101',
     'Room 102',
@@ -46,7 +48,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     'Room 305',
   ];
 
-  //test push to nikko
   // List of buildings that DON'T have classrooms
   final List<String> _nonAcademicBuildings = [
     'Plaza De Corazon Building (Red Bldg.)', // Building 1
@@ -58,7 +59,8 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     'Immaculate Heart Gymnasium', // Building 19
     'Immaculate Heart Gymnasium Annex', // Building 20
     'Yellow Food Court',
-    ' Entrance'
+    'Entrance',
+    'Covered Court'
   ];
 
   @override
@@ -66,7 +68,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     super.initState();
     print('Building code passed: ${widget.buildingName}'); // Debug print
     _fetchBuildingDetails();
-    _offices = List.from(widget.buildingOffices);
     _searchController.addListener(() {
       setState(() {});
     });
@@ -81,6 +82,9 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       _infoController.text = building?.description ?? '';
       _isLoading = false;
     });
+    if (building != null) {
+      _fetchOffices(building.buildingCode);
+      }
   } catch (e) {
     print('Error fetching building: $e');
     setState(() {
@@ -90,8 +94,23 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   }
 }
 
-  bool get _hasClassrooms =>
-      !_nonAcademicBuildings.contains(_building?.name);
+Future<void> _fetchOffices(String buildingCode) async {
+  try {
+    final offices = await OfficeService().fetchOfficesByBuildingCode(buildingCode);
+    print('Offices: $offices');
+    setState(() {
+      _officesList = offices;
+    });
+  } catch (e) {
+    print('Error fetching offices: $e');
+  }
+}
+
+  bool get _hasClassrooms {
+    if (_building == null) return false;
+    return !_nonAcademicBuildings.contains(_building!.name);
+  }
+      
 
 
   @override
@@ -123,7 +142,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                       setState(() {
                         _editMode = false;
                         // Reset to original data when canceling edit
-                        _offices = List.from(widget.buildingOffices);
                       });
                     },
                   ),
@@ -217,13 +235,13 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                     const SizedBox(height: 20),
 
                     // Offices section (only show if building has offices)
-                    if (_offices.isNotEmpty) ..._buildOfficesSection(),
+                    if (_officesList.isNotEmpty) ..._buildOfficesSection(),
 
                     // Classrooms section (only show for academic buildings)
                     if (_hasClassrooms) ..._buildClassroomsSection(),
 
                     // Special message for non-academic buildings
-                    if (!_hasClassrooms && _offices.isEmpty)
+                    if (!_hasClassrooms && _officesList.isEmpty)
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: 40.0),
@@ -252,74 +270,69 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   }
 
   List<Widget> _buildOfficesSection() {
-    final query = _searchController.text.toLowerCase().trim();
-    final filteredOffices = query.isEmpty
-        ? _offices
-        : _offices.where((o) => o.toLowerCase().contains(query)).toList();
+  final query = _searchController.text.toLowerCase().trim();
+  final filteredOffices = query.isEmpty
+      ? _officesList
+      : _officesList.where((o) => o.name.toLowerCase().contains(query)).toList();
 
-    return [
-      Row(
-        children: [
-          const Text(
-            'Offices',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+  return [
+    Row(
+      children: [
+        const Text(
+          'Offices',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(width: 10),
-          if (_editMode && widget.isAdmin)
-            IconButton(
-              icon: const Icon(Icons.add, size: 20),
-              onPressed: _addNewOffice,
-            ),
-        ],
-      ),
-      const SizedBox(height: 10),
-
-      // Offices list
-      if (filteredOffices.isEmpty && query.isNotEmpty)
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 12.0),
-          child:
-              Text('No matching offices', style: TextStyle(color: Colors.grey)),
         ),
-      ...filteredOffices
-          .asMap()
-          .entries
-          .map((entry) => ListTile(
-                leading: const Icon(Icons.room, color: Colors.black),
-                title: _editMode && widget.isAdmin
-                    ? TextField(
-                        controller: TextEditingController(text: entry.value),
-                        style: const TextStyle(color: Colors.black),
-                        onChanged: (value) {
-                          setState(() {
-                            // update the index in the original _offices list
-                            final originalIndex =
-                                _offices.indexWhere((o) => o == entry.value);
-                            if (originalIndex != -1)
-                              _offices[originalIndex] = value;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Office name',
-                        ),
-                      )
-                    : Text(entry.value),
-                trailing: (_editMode && widget.isAdmin)
-                    ? IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _removeOffice(entry.key),
-                      )
-                    : null,
-              ))
-          .toList(),
+        const SizedBox(width: 10),
+        if (_editMode && widget.isAdmin)
+          IconButton(
+            icon: const Icon(Icons.add, size: 20),
+            onPressed: _addNewOffice,
+          ),
+      ],
+    ),
+    const SizedBox(height: 10),
 
-      if (_hasClassrooms) const Divider(height: 30),
-    ];
-  }
+    // Offices list
+    if (filteredOffices.isEmpty && query.isNotEmpty)
+      const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.0),
+        child: Text('No matching offices', style: TextStyle(color: Colors.grey)),
+      ),
+    ...filteredOffices
+        .asMap()
+        .entries
+        .map((entry) => ListTile(
+              leading: const Icon(Icons.room, color: Colors.black),
+              title: _editMode && widget.isAdmin
+                  ? TextField(
+                      controller: TextEditingController(text: entry.value.name),
+                      style: const TextStyle(color: Colors.black),
+                      onChanged: (value) {
+                        setState(() {
+                          _officesList[entry.key] =
+                              Office(id: entry.value.id, name: value, buildingCode: entry.value.buildingCode);
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Office name',
+                      ),
+                    )
+                  : Text(entry.value.name),
+              trailing: (_editMode && widget.isAdmin)
+                  ? IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _removeOffice(entry.key),
+                    )
+                  : null,
+            ))
+        .toList(),
+    if (_hasClassrooms) const Divider(height: 30),
+  ];
+}
 
   List<Widget> _buildClassroomsSection() {
     final query = _searchController.text.toLowerCase().trim();
@@ -447,13 +460,13 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
 
   void _addNewOffice() {
     setState(() {
-      _offices.add('New Office');
+      _officesList.add(Office(id: "", name: 'New Office', buildingCode: _building?.buildingCode ?? ''));
     });
   }
 
   void _removeOffice(int index) {
     setState(() {
-      _offices.removeAt(index);
+      _officesList.removeAt(index);
     });
   }
 
