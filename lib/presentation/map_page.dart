@@ -19,7 +19,7 @@ import 'package:hau_navigation_app/data/waypoints.dart' as wpdata;
 
 class MapPage extends StatefulWidget {
   final bool isAdmin;
-  
+
   const MapPage({super.key, this.isAdmin = false});
 
   @override
@@ -29,7 +29,7 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   CampusRoute? _previousSelectedRoute;
-  
+
   // Location and compass tracking
   Position? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription;
@@ -37,14 +37,15 @@ class _MapPageState extends State<MapPage> {
   double _currentHeading = 0.0;
   bool _isLocationEnabled = false;
   bool _isFollowingUser = false;
-  
+
   // Search functionality
   final TextEditingController _routeSearchController = TextEditingController();
   String _routeSearchQuery = '';
 
   // Graph data for dummy pathways and shortest-path computation
   final Map<String, LatLng> _graphNodes = {}; // name -> LatLng
-  final Map<String, Map<String, double>> _graphEdges = {}; // name -> (neighbor -> distance)
+  final Map<String, Map<String, double>> _graphEdges =
+      {}; // name -> (neighbor -> distance)
 
   // Computed shortest path polyline (displayed on map)
   List<LatLng> _computedPath = [];
@@ -82,11 +83,17 @@ class _MapPageState extends State<MapPage> {
     },
     {
       'name': 'San Francisco De Javier Building (SFJ)',
-      'offices': ['President\'s Office', 'University Library', 'University Theater'],
+      'offices': [
+        'President\'s Office',
+        'University Library',
+        'University Theater'
+      ],
     },
     {
       'name': 'St. Therese of Liseux Building (STL)',
-      'offices': ['School of Hospitality and Tourism Management Dean\'s Office'],
+      'offices': [
+        'School of Hospitality and Tourism Management Dean\'s Office'
+      ],
     },
     {
       'name': 'Warehouse & Carpentry',
@@ -260,7 +267,8 @@ class _MapPageState extends State<MapPage> {
       _currentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      debugPrint('Got initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+      debugPrint(
+          'Got initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
       setState(() {
         _isLocationEnabled = true;
       });
@@ -277,7 +285,8 @@ class _MapPageState extends State<MapPage> {
     _positionStreamSubscription = Geolocator.getPositionStream(
       locationSettings: locationSettings,
     ).listen((Position position) {
-      debugPrint('Position update: ${position.latitude}, ${position.longitude}');
+      debugPrint(
+          'Position update: ${position.latitude}, ${position.longitude}');
       setState(() {
         _currentPosition = position;
         _isLocationEnabled = true;
@@ -308,7 +317,8 @@ class _MapPageState extends State<MapPage> {
 
   /// Initialize compass/heading tracking
   void _initializeCompassTracking() {
-    _compassStreamSubscription = FlutterCompass.events?.listen((CompassEvent event) {
+    _compassStreamSubscription =
+        FlutterCompass.events?.listen((CompassEvent event) {
       if (event.heading != null) {
         setState(() {
           _currentHeading = event.heading!;
@@ -348,7 +358,7 @@ class _MapPageState extends State<MapPage> {
           );
         });
       }
-      
+
       // Move to user location
       _mapController.move(
         LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
@@ -417,10 +427,10 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // Changed from primaryRed to white
-      
+
       // Custom App Bar with curved bottom corners (Extended Height)
       appBar: const CustomAppBar(),
-      
+
       body: Stack(
         children: [
           // Map view (full screen)
@@ -438,7 +448,8 @@ class _MapPageState extends State<MapPage> {
                     final polylines = <Polyline>[];
 
                     // Debug: log route state and navigation mode
-                    debugPrint('Map Consumer rebuild - selectedRoute: ${selectedRoute?.id ?? 'null'}, _isNavigating: $_isNavigating');
+                    debugPrint(
+                        'Map Consumer rebuild - selectedRoute: ${selectedRoute?.id ?? 'null'}, _isNavigating: $_isNavigating');
 
                     // If a route is selected and we're NOT currently navigating, display its polyline
                     if (selectedRoute != null && !_isNavigating) {
@@ -476,21 +487,24 @@ class _MapPageState extends State<MapPage> {
                       debugPrint('Error building graph polylines: $e');
                     }
 
-                  return FlutterMap(
+                    return FlutterMap(
                       mapController: _mapController,
                       options: const MapOptions(
-                        initialCenter: LatLng(15.132896, 120.590068), // HAU coordinates
+                        initialCenter:
+                            LatLng(15.132896, 120.590068), // HAU coordinates
                         initialZoom: 17.0,
                         minZoom: 15.0,
                         maxZoom: 19.0,
                       ),
                       children: [
                         TileLayer(
-                          urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                          urlTemplate:
+                              'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                           subdomains: const ['a', 'b', 'c', 'd'],
                           userAgentPackageName: 'com.hau.navigation_app',
                           additionalOptions: const {
-                            'attribution': '© OpenStreetMap contributors © CARTO',
+                            'attribution':
+                                '© OpenStreetMap contributors © CARTO',
                           },
                         ),
                         // Route polylines layer (selected campus route)
@@ -537,14 +551,18 @@ class _MapPageState extends State<MapPage> {
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: Colors.blue,
-                                          border: Border.all(color: Colors.white, width: 1.5),
+                                          border: Border.all(
+                                              color: Colors.white, width: 1.5),
                                         ),
                                       ),
                                       // Numeric label based on ordered keys (1-based)
                                       Builder(builder: (ctx) {
                                         try {
-                                          final idx = _graphNodes.keys.toList().indexOf(entry.key);
-                                          final label = idx >= 0 ? '${idx + 1}' : '';
+                                          final idx = _graphNodes.keys
+                                              .toList()
+                                              .indexOf(entry.key);
+                                          final label =
+                                              idx >= 0 ? '${idx + 1}' : '';
                                           return Text(
                                             label,
                                             style: const TextStyle(
@@ -562,14 +580,15 @@ class _MapPageState extends State<MapPage> {
                                 ),
 
                             // User location marker if available
-                            if (_buildUserLocationMarker() != null) _buildUserLocationMarker()!,
+                            if (_buildUserLocationMarker() != null)
+                              _buildUserLocationMarker()!,
                           ],
                         ),
                       ],
                     );
                   },
                 ),
-                
+
                 /* COMMENT START
                 // Search bar (positioned at top of map)
                 Positioned(
@@ -610,12 +629,17 @@ class _MapPageState extends State<MapPage> {
                       ],
                     ),
                     child: IconButton(
-                      onPressed: _isLocationEnabled ? _toggleLocationFollowing : null,
+                      onPressed:
+                          _isLocationEnabled ? _toggleLocationFollowing : null,
                       icon: Icon(
-                        _isFollowingUser ? Icons.gps_fixed : Icons.gps_not_fixed,
+                        _isFollowingUser
+                            ? Icons.gps_fixed
+                            : Icons.gps_not_fixed,
                         color: _isFollowingUser ? Colors.blue : Colors.grey,
                       ),
-                      tooltip: _isFollowingUser ? 'Stop following location' : 'Follow my location',
+                      tooltip: _isFollowingUser
+                          ? 'Stop following location'
+                          : 'Follow my location',
                     ),
                   ),
                 ),
@@ -637,11 +661,17 @@ class _MapPageState extends State<MapPage> {
                       ],
                     ),
                     child: IconButton(
-                      tooltip: _showBuildings ? 'Hide building markers' : 'Show building markers',
-                      onPressed: () => setState(() => _showBuildings = !_showBuildings),
+                      tooltip: _showBuildings
+                          ? 'Hide building markers'
+                          : 'Show building markers',
+                      onPressed: () =>
+                          setState(() => _showBuildings = !_showBuildings),
                       icon: Icon(
-                        _showBuildings ? Icons.location_city : Icons.location_off,
-                        color: _showBuildings ? AppTheme.primaryRed : Colors.grey,
+                        _showBuildings
+                            ? Icons.location_city
+                            : Icons.location_off,
+                        color:
+                            _showBuildings ? AppTheme.primaryRed : Colors.grey,
                       ),
                     ),
                   ),
@@ -665,10 +695,15 @@ class _MapPageState extends State<MapPage> {
                         ],
                       ),
                       child: IconButton(
-                        tooltip: _showWaypoints ? 'Hide waypoint markers' : 'Show waypoint markers',
-                        onPressed: () => setState(() => _showWaypoints = !_showWaypoints),
+                        tooltip: _showWaypoints
+                            ? 'Hide waypoint markers'
+                            : 'Show waypoint markers',
+                        onPressed: () =>
+                            setState(() => _showWaypoints = !_showWaypoints),
                         icon: Icon(
-                          _showWaypoints ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                          _showWaypoints
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
                           color: _showWaypoints ? Colors.blue : Colors.grey,
                         ),
                       ),
@@ -707,7 +742,7 @@ class _MapPageState extends State<MapPage> {
               ],
             ),
           ),
-          
+
           /* COMMENT START
           // Draggable buildings list
           DraggableScrollableSheet(
@@ -866,7 +901,8 @@ class _MapPageState extends State<MapPage> {
                       });
                     },
                     icon: const Icon(Icons.close, color: Colors.white),
-                    label: const Text('STOP NAVIGATION', style: TextStyle(color: Colors.white)),
+                    label: const Text('STOP NAVIGATION',
+                        style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black87,
                       minimumSize: const Size(double.infinity, 48),
@@ -930,7 +966,8 @@ class _MapPageState extends State<MapPage> {
 
                   // Header
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                     child: Center(
                       child: Text(
                         'Campus Walking Routes',
@@ -946,19 +983,24 @@ class _MapPageState extends State<MapPage> {
 
                   // Search field
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     child: TextField(
                       controller: _routeSearchController,
-                      style: const TextStyle(color: Colors.black), // Explicitly set text color to black
+                      style: const TextStyle(
+                          color: Colors
+                              .black), // Explicitly set text color to black
                       decoration: InputDecoration(
                         hintText: 'Search building...',
                         hintStyle: const TextStyle(color: Colors.grey),
                         filled: true,
                         fillColor: Colors.grey[100],
-                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                        prefixIcon:
+                            const Icon(Icons.search, color: Colors.grey),
                         suffixIcon: _routeSearchQuery.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear, color: Colors.grey),
+                                icon:
+                                    const Icon(Icons.clear, color: Colors.grey),
                                 onPressed: () {
                                   _routeSearchController.clear();
                                   setModalState(() => _routeSearchQuery = '');
@@ -969,7 +1011,8 @@ class _MapPageState extends State<MapPage> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                       ),
                       onChanged: (query) {
                         setModalState(() => _routeSearchQuery = query);
@@ -984,8 +1027,10 @@ class _MapPageState extends State<MapPage> {
                         final filteredBuildings = _routeSearchQuery.isEmpty
                             ? _buildings
                             : _buildings.where((b) {
-                                final name = (b['name'] as String).toLowerCase();
-                                return name.contains(_routeSearchQuery.toLowerCase());
+                                final name =
+                                    (b['name'] as String).toLowerCase();
+                                return name
+                                    .contains(_routeSearchQuery.toLowerCase());
                               }).toList();
 
                         if (filteredBuildings.isEmpty) {
@@ -993,7 +1038,8 @@ class _MapPageState extends State<MapPage> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                                Icon(Icons.search_off,
+                                    size: 64, color: Colors.grey[400]),
                                 const SizedBox(height: 16),
                                 Text(
                                   'No buildings found',
@@ -1006,7 +1052,8 @@ class _MapPageState extends State<MapPage> {
                                 const SizedBox(height: 8),
                                 Text(
                                   'Try a different search term',
-                                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey[500]),
                                 ),
                               ],
                             ),
@@ -1018,7 +1065,8 @@ class _MapPageState extends State<MapPage> {
                           itemCount: filteredBuildings.length,
                           itemBuilder: (context, index) {
                             final building = filteredBuildings[index];
-                            final originalIndex = _buildings.indexWhere((b) => b['name'] == building['name']);
+                            final originalIndex = _buildings.indexWhere(
+                                (b) => b['name'] == building['name']);
 
                             return Card(
                               elevation: 1,
@@ -1043,24 +1091,31 @@ class _MapPageState extends State<MapPage> {
                                 ),
                                 title: Text(
                                   building['name'] as String,
-                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500),
                                 ),
-                                subtitle: (building['offices'] as List).isNotEmpty
-                                    ? Text(
-                                        '${(building['offices'] as List).length} office${(building['offices'] as List).length > 1 ? 's' : ''}',
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                      )
-                                    : null,
-                                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                                subtitle:
+                                    (building['offices'] as List).isNotEmpty
+                                        ? Text(
+                                            '${(building['offices'] as List).length} office${(building['offices'] as List).length > 1 ? 's' : ''}',
+                                            style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12),
+                                          )
+                                        : null,
+                                trailing: const Icon(Icons.arrow_forward_ios,
+                                    size: 16),
                                 onTap: () async {
                                   // First close the bottom sheet so the user returns to the full map
                                   Navigator.pop(modalContext);
                                   // Small delay to allow the sheet to dismiss cleanly before pushing a new route
-                                  await Future.delayed(const Duration(milliseconds: 150));
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 150));
                                   // Then push the building detail page from the main MapPage context
                                   _pushBuildingDetailAndHandleNavigation(
                                     building['name'] as String,
-                                    List<String>.from(building['offices'] as List),
+                                    List<String>.from(
+                                        building['offices'] as List),
                                   );
                                 },
                               ),
@@ -1114,20 +1169,19 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
             child: Center(
               child: Text(
                 'Admin Map Controls',
                 style: const TextStyle(
-                  fontSize: 25, 
-                  fontWeight: FontWeight.bold, 
-                  color: Colors.white
-                ),
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
             ),
           ),
           const Divider(),
-
           Expanded(
             child: Container(
               decoration: const BoxDecoration(
@@ -1138,7 +1192,8 @@ class _MapPageState extends State<MapPage> {
                 ),
               ),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1150,7 +1205,11 @@ class _MapPageState extends State<MapPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Buildings', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.primaryRed)),
+                            Text('Buildings',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryRed)),
                             const SizedBox(height: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1159,17 +1218,27 @@ class _MapPageState extends State<MapPage> {
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create building: not implemented'))),
+                                        onPressed: () => ScaffoldMessenger.of(
+                                                context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Create building: not implemented'))),
                                         icon: const Icon(Icons.add),
-                                        label: const Text('Create', style: TextStyle(fontSize: 19)),
+                                        label: const Text('Create',
+                                            style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update building: not implemented'))),
+                                        onPressed: () => ScaffoldMessenger.of(
+                                                context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Update building: not implemented'))),
                                         icon: const Icon(Icons.edit),
-                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                        label: const Text('Update',
+                                            style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                   ],
@@ -1178,10 +1247,16 @@ class _MapPageState extends State<MapPage> {
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Delete building: not implemented'))),
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent),
+                                    onPressed: () => ScaffoldMessenger.of(
+                                            context)
+                                        .showSnackBar(const SnackBar(
+                                            content: Text(
+                                                'Delete building: not implemented'))),
                                     icon: const Icon(Icons.delete),
-                                    label: const Text('Delete', style: TextStyle(fontSize: 19)),
+                                    label: const Text('Delete',
+                                        style: TextStyle(fontSize: 19)),
                                   ),
                                 ),
                               ],
@@ -1200,7 +1275,11 @@ class _MapPageState extends State<MapPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Waypoints', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.primaryRed)),
+                            Text('Waypoints',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryRed)),
                             const SizedBox(height: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1209,17 +1288,27 @@ class _MapPageState extends State<MapPage> {
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create waypoint: not implemented'))),
+                                        onPressed: () => ScaffoldMessenger.of(
+                                                context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Create waypoint: not implemented'))),
                                         icon: const Icon(Icons.add_location),
-                                        label: const Text('Create', style: TextStyle(fontSize: 19)),
+                                        label: const Text('Create',
+                                            style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update waypoint: not implemented'))),
+                                        onPressed: () => ScaffoldMessenger.of(
+                                                context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Update waypoint: not implemented'))),
                                         icon: const Icon(Icons.edit_location),
-                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                        label: const Text('Update',
+                                            style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                   ],
@@ -1228,10 +1317,16 @@ class _MapPageState extends State<MapPage> {
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Delete waypoint: not implemented'))),
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent),
+                                    onPressed: () => ScaffoldMessenger.of(
+                                            context)
+                                        .showSnackBar(const SnackBar(
+                                            content: Text(
+                                                'Delete waypoint: not implemented'))),
                                     icon: const Icon(Icons.delete),
-                                    label: const Text('Delete', style: TextStyle(fontSize: 19)),
+                                    label: const Text('Delete',
+                                        style: TextStyle(fontSize: 19)),
                                   ),
                                 ),
                               ],
@@ -1250,7 +1345,11 @@ class _MapPageState extends State<MapPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Connections (waypoint edges)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.primaryRed)),
+                            Text('Connections (waypoint edges)',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryRed)),
                             const SizedBox(height: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1259,17 +1358,27 @@ class _MapPageState extends State<MapPage> {
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create connection: not implemented'))),
+                                        onPressed: () => ScaffoldMessenger.of(
+                                                context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Create connection: not implemented'))),
                                         icon: const Icon(Icons.link),
-                                        label: const Text('Create', style: TextStyle(fontSize: 19)),
+                                        label: const Text('Create',
+                                            style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Update connection: not implemented'))),
+                                        onPressed: () => ScaffoldMessenger.of(
+                                                context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Update connection: not implemented'))),
                                         icon: const Icon(Icons.swap_horiz),
-                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                        label: const Text('Update',
+                                            style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                   ],
@@ -1278,10 +1387,16 @@ class _MapPageState extends State<MapPage> {
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Delete connection: not implemented'))),
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent),
+                                    onPressed: () => ScaffoldMessenger.of(
+                                            context)
+                                        .showSnackBar(const SnackBar(
+                                            content: Text(
+                                                'Delete connection: not implemented'))),
                                     icon: const Icon(Icons.link_off),
-                                    label: const Text('Delete', style: TextStyle(fontSize: 19)),
+                                    label: const Text('Delete',
+                                        style: TextStyle(fontSize: 19)),
                                   ),
                                 ),
                               ],
@@ -1294,9 +1409,11 @@ class _MapPageState extends State<MapPage> {
                     const SizedBox(height: 20),
                     Center(
                       child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white),
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('CLOSE', style: TextStyle(color: Colors.black)),
+                        child: const Text('CLOSE',
+                            style: TextStyle(color: Colors.black)),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -1424,7 +1541,6 @@ class _MapPageState extends State<MapPage> {
         'lat': 15.132334,
         'lng': 120.588711,
       },
-
     ];
 
     // Populate graph node positions for later shortest-path usage
@@ -1436,7 +1552,9 @@ class _MapPageState extends State<MapPage> {
       final name = b['name'] as String;
       try {
         final mapped = wpdata.buildingToWaypoints[name];
-        if (mapped != null && mapped.isNotEmpty && _graphNodes.containsKey(mapped.first)) {
+        if (mapped != null &&
+            mapped.isNotEmpty &&
+            _graphNodes.containsKey(mapped.first)) {
           final wp = _graphNodes[mapped.first]!;
           b['lat'] = wp.latitude;
           b['lng'] = wp.longitude;
@@ -1464,14 +1582,13 @@ class _MapPageState extends State<MapPage> {
     // you can manually define exact edges in `_graphEdges` (recommended for
     // precise walkway shapes). See `_initializeGraphData()` comments below
     // for an example of how to manually define edges.
-  // Example waypoint nodes (replace these with your surveyed walkway waypoints)
-  // These are small examples placed near existing buildings and will be used
-  // to create more realistic pedestrian routes when connected via edges.
-  // You can add as many as you need; use descriptive names.
-  // Merge waypoint nodes from external data file (edit lib/data/waypoints.dart)
-  
+    // Example waypoint nodes (replace these with your surveyed walkway waypoints)
+    // These are small examples placed near existing buildings and will be used
+    // to create more realistic pedestrian routes when connected via edges.
+    // You can add as many as you need; use descriptive names.
+    // Merge waypoint nodes from external data file (edit lib/data/waypoints.dart)
 
-  // -----------------------------------------------------------------
+    // -----------------------------------------------------------------
 
     return buildingLocations
         .where((building) => building['lat'] != null && building['lng'] != null)
@@ -1508,20 +1625,16 @@ class _MapPageState extends State<MapPage> {
             );
           },
           //LOCATION POINTS
-          child: Column(
+          child: Transform.rotate(
+            angle: _isFollowingUser ? _currentHeading * math.pi / 180 : 0,
+            child: Column(
               children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryYellow,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
+                _buildBuildingMarkerIcon(
+                    building['name'] as String), // <-- ICON DISPLAYED HERE
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(4),
@@ -1546,6 +1659,7 @@ class _MapPageState extends State<MapPage> {
               ],
             ),
           ),
+        ),
       );
     }).toList();
   }
@@ -1553,27 +1667,26 @@ class _MapPageState extends State<MapPage> {
   // Initializes dummy graph edges connecting nearby buildings.
   // This creates a fully connected-ish local graph by linking each node to a few nearest neighbors.
   Future<void> _initializeGraphData() async {
-  // Clear any existing
-  _graphNodes.clear();
-  _graphEdges.clear();
+    // Clear any existing
+    _graphNodes.clear();
+    _graphEdges.clear();
 
-  // Fetch waypoints and edges from Supabase
-  final waypoints = await WaypointService().fetchWaypoints();
-  final edges = await EdgeService().fetchEdges();
+    // Fetch waypoints and edges from Supabase
+    final waypoints = await WaypointService().fetchWaypoints();
+    final edges = await EdgeService().fetchEdges();
 
-  // Convert waypoints to Map<String, LatLng>
-  setState(() {
-    for (var wp in waypoints) {
-      _graphNodes[wp.waypointKey] = LatLng(wp.latitude, wp.longitude);
-    }
+    // Convert waypoints to Map<String, LatLng>
+    setState(() {
+      for (var wp in waypoints) {
+        _graphNodes[wp.waypointKey] = LatLng(wp.latitude, wp.longitude);
+      }
 
-    // Convert edges to Map<String, Map<String, double>>
-    for (var edge in edges) {
-      _graphEdges.putIfAbsent(edge.fromWaypoint, () => {});
-      _graphEdges[edge.fromWaypoint]![edge.toWaypoint] = edge.distanceMeters;
-    }
-  });
-
+      // Convert edges to Map<String, Map<String, double>>
+      for (var edge in edges) {
+        _graphEdges.putIfAbsent(edge.fromWaypoint, () => {});
+        _graphEdges[edge.fromWaypoint]![edge.toWaypoint] = edge.distanceMeters;
+      }
+    });
 
     // -----------------------------------------------------------------
     // MANUAL EDGE DEFINITION (optional, recommended for accurate paths)
@@ -1615,7 +1728,10 @@ class _MapPageState extends State<MapPage> {
 
     while (nodes.isNotEmpty) {
       // get node with smallest tentative distance
-      String u = nodes.reduce((a, b) => (distances[a] ?? double.infinity) < (distances[b] ?? double.infinity) ? a : b);
+      String u = nodes.reduce((a, b) =>
+          (distances[a] ?? double.infinity) < (distances[b] ?? double.infinity)
+              ? a
+              : b);
       nodes.remove(u);
 
       if (u == targetNode) break;
@@ -1650,7 +1766,8 @@ class _MapPageState extends State<MapPage> {
   void _adjustPathDynamically() {
     if (_currentPosition == null || _computedPath.isEmpty) return;
 
-    final currentPos = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+    final currentPos =
+        LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
     const double proximityThreshold = 15.0; // 15 meters
     const double deviationThreshold = 50.0; // 50 meters
 
@@ -1662,7 +1779,7 @@ class _MapPageState extends State<MapPage> {
     for (int i = 0; i < _computedPath.length; i++) {
       final pathPoint = _computedPath[i];
       final distance = Distance().as(LengthUnit.Meter, currentPos, pathPoint);
-      
+
       if (distance < proximityThreshold && distance < closestDistance) {
         closestDistance = distance;
         closestPointIndex = i;
@@ -1674,7 +1791,10 @@ class _MapPageState extends State<MapPage> {
       // User is close to a point in the path, remove previous points
       debugPrint('User reached point $closestPointIndex, reducing path');
       setState(() {
-        _computedPath = [currentPos, ..._computedPath.sublist(closestPointIndex + 1)];
+        _computedPath = [
+          currentPos,
+          ..._computedPath.sublist(closestPointIndex + 1)
+        ];
       });
     } else {
       // Check if user has deviated significantly from the path
@@ -1688,7 +1808,8 @@ class _MapPageState extends State<MapPage> {
 
       if (minDistanceToPath > deviationThreshold) {
         // User has deviated from path, recalculate
-        debugPrint('User deviated from path (${minDistanceToPath.toStringAsFixed(1)}m), recalculating');
+        debugPrint(
+            'User deviated from path (${minDistanceToPath.toStringAsFixed(1)}m), recalculating');
         _computePathFromCurrentTo(_currentNavigationTarget!);
       }
     }
@@ -1696,7 +1817,6 @@ class _MapPageState extends State<MapPage> {
 
   // Compute shortest path from current location to a building name and set _computedPath
   void _computePathFromCurrentTo(String buildingName) {
-    
     if (_currentPosition == null) {
       // No user location; cannot compute path
       return;
@@ -1710,7 +1830,6 @@ class _MapPageState extends State<MapPage> {
       if (mapped != null && mapped.isNotEmpty) {
         targetNode = mapped.first; // Use the mapped waypoint key
       }
-
     } catch (_) {}
 
     debugPrint('All graph node keys: ${_graphNodes.keys.toList()}');
@@ -1723,10 +1842,11 @@ class _MapPageState extends State<MapPage> {
     }
 
     // Find nearest graph node to current position (only from waypoints, not buildings)
-    final currentPos = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+    final currentPos =
+        LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
     String? nearestNodeToUser;
     double nearestDist = double.infinity;
-    
+
     // Only consider waypoint nodes (exclude building nodes that aren't mapped to waypoints)
     for (final entry in _graphNodes.entries) {
       final pos = entry.value;
@@ -1744,7 +1864,7 @@ class _MapPageState extends State<MapPage> {
 
     debugPrint('Computing nearest path from $nearestNodeToUser to $targetNode');
     final nodePath = _dijkstra(nearestNodeToUser, targetNode);
-    
+
     if (nodePath.isEmpty) {
       debugPrint('No path found between $nearestNodeToUser and $targetNode');
       return;
@@ -1754,7 +1874,7 @@ class _MapPageState extends State<MapPage> {
     final nodePositions = <LatLng>[];
     // Start with the user's exact current location
     nodePositions.add(currentPos);
-    
+
     // Add each waypoint in the path
     for (final node in nodePath) {
       final pos = _graphNodes[node];
@@ -1768,14 +1888,15 @@ class _MapPageState extends State<MapPage> {
       _computedPath = nodePositions;
       _currentNavigationTarget = buildingName;
     });
-    
+
     debugPrint('Path computed with ${nodePositions.length} points');
   }
 
   // Push the BuildingDetailPage and await a navigation request result.
   // If the detail page returns a building name (when user taps START NAVIGATION),
   // compute and display the shortest path to that building.
-  Future<void> _pushBuildingDetailAndHandleNavigation(String buildingName, List<String> offices) async {
+  Future<void> _pushBuildingDetailAndHandleNavigation(
+      String buildingName, List<String> offices) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -1804,6 +1925,109 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  // Resolve the asset path for a building's logo in assets/building_logo
+  String? _buildingLogoAsset(String fullName) {
+    // Use contains to match names that include abbreviations in parentheses
+    if (fullName.contains('Plaza De Corazon'))
+      return 'assets/building_logo/Plaza De Corazon Building.png';
+    if (fullName.contains('St. Martha Hall'))
+      return 'assets/building_logo/St. Martha Hall Building.png';
+    if (fullName.contains('San Francisco De Javier'))
+      return 'assets/building_logo/San Francisco De Javier Building.png';
+    if (fullName.contains('St. Therese of Liseux'))
+      return 'assets/building_logo/St. Therese of Liseux Building.png';
+    if (fullName.contains('Warehouse'))
+      return 'assets/building_logo/WareHouse and Carpentry.png';
+    if (fullName.contains('St. Gabriel Hall'))
+      return 'assets/building_logo/St. Gabriel Hall Building.png';
+    if (fullName.contains('St. Raphael Hall'))
+      return 'assets/building_logo/St. Raphael Hall Building.png';
+    if (fullName.contains('St. Michael Hall'))
+      return 'assets/building_logo/St. Michael Hall Building.png';
+    if (fullName.contains('Geromin G. Nepomuceno'))
+      return 'assets/building_logo/Geromin G. Nepomuceno Building.png';
+    if (fullName.contains('Peter G. Nepomuceno'))
+      return 'assets/building_logo/Peter G. Nepomuceno Building.png';
+    if (fullName.contains('Don Juan D. Nepomuceno'))
+      return 'assets/building_logo/Don Juan D. Nepomuceno Building.png';
+    if (fullName.contains('Archbishop Pedro Santos'))
+      return 'assets/building_logo/Archbishop Pedro Santos Building.png';
+    if (fullName.contains('Mamerto G. Nepomuceno'))
+      return 'assets/building_logo/Mamerto G. Nepomuceno Building.png';
+    if (fullName.contains('Chapel of the Holy Guardian Angel') ||
+        fullName.contains('Chapel Of The Holy Guardian Angel')) {
+      return 'assets/building_logo/Chapel Of The Holy Guardian Angel.png';
+    }
+    if (fullName.contains('Sister Josefina Nepomuceno Formation Center')) {
+      return 'assets/building_logo/Sister Josefina Nepomuceno Formation Center.png';
+    }
+    if (fullName.contains('St. Joseph Hall'))
+      return 'assets/building_logo/St. Joseph Hall Building.png';
+    if (fullName.contains('Sacred Heart'))
+      return 'assets/building_logo/Sacred Heart Building.png';
+    if (fullName.contains('Covered Court'))
+      return 'assets/building_logo/Covered Court.png';
+    if (fullName.contains('Immaculate Heart Gymnasium Annex'))
+      return 'assets/building_logo/Immaculate Heart Gymnasium Annex.png';
+    if (fullName.contains('Immaculate Heart Gymnasium'))
+      return 'assets/building_logo/Immaculate Heart Gymnasium.png';
+    if (fullName.contains('Yellow Food Court'))
+      return 'assets/building_logo/Yellow Food Court.png';
+    return null;
+  }
+
+  // Build a marker widget using the building logo with a circular style and white border
+  Widget _buildBuildingMarkerIcon(String buildingName) {
+    final asset = _buildingLogoAsset(buildingName);
+    if (asset == null) {
+      // Fallback to current yellow dot style
+      return Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: AppTheme.primaryYellow,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        asset,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback to yellow dot if asset not found
+          return Container(
+            color: AppTheme.primaryYellow,
+            child: const Icon(Icons.location_on, color: Colors.white),
+          );
+        },
+      ),
+    );
+  }
+
   String _getAbbreviatedName(String fullName) {
     // Return abbreviated names for map markers (arranged in same order as _buildings list)
     if (fullName.contains('Plaza De Corazon')) return 'Red Bldg.';
@@ -1820,14 +2044,16 @@ class _MapPageState extends State<MapPage> {
     if (fullName.contains('Archbishop Pedro Santos')) return 'APS';
     if (fullName.contains('Mamerto G. Nepomuceno')) return 'MGN';
     if (fullName.contains('Chapel of the Holy Guardian Angel')) return 'Chapel';
-    if (fullName.contains('Sister Josefina Nepomuceno Formation Center')) return 'Formation';
+    if (fullName.contains('Sister Josefina Nepomuceno Formation Center'))
+      return 'Formation';
     if (fullName.contains('St. Joseph Hall')) return 'SJH';
     if (fullName.contains('Sacred Heart')) return 'SH';
     if (fullName.contains('Covered Court')) return 'Court';
-    if (fullName.contains('Immaculate Heart Gymnasium Annex')) return 'Gym Annex';
+    if (fullName.contains('Immaculate Heart Gymnasium Annex'))
+      return 'Gym Annex';
     if (fullName.contains('Immaculate Heart Gymnasium')) return 'Gymnasium';
     if (fullName.contains('Yellow Food Court')) return 'Food Court';
-    
+
     // Fallback: return first 2 words for any unmatched buildings
     final words = fullName.split(' ');
     return words.length > 2 ? '${words[0]} ${words[1]}' : fullName;
@@ -1836,7 +2062,9 @@ class _MapPageState extends State<MapPage> {
   /// Attempt to recompute the shortest path when the user moves.
   /// Uses simple guards to avoid spamming computation on every small position update.
   void _maybeRecomputePathOnMove() {
-    if (!_isNavigating || _currentNavigationTarget == null || _currentPosition == null) return;
+    if (!_isNavigating ||
+        _currentNavigationTarget == null ||
+        _currentPosition == null) return;
 
     final now = DateTime.now();
 
@@ -1849,11 +2077,13 @@ class _MapPageState extends State<MapPage> {
       if (since < _minRecomputeInterval) return;
     }
 
-    final currentPos = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+    final currentPos =
+        LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
 
     // Throttle by movement distance
     if (_lastPathComputePosition != null) {
-      final dist = Distance().as(LengthUnit.Meter, _lastPathComputePosition!, currentPos);
+      final dist = Distance()
+          .as(LengthUnit.Meter, _lastPathComputePosition!, currentPos);
       if (dist < _minRecomputeDistanceMeters) return;
     }
 
