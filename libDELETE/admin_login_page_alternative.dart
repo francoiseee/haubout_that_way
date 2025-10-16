@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/presentation/map_page.dart';
+import 'package:hau_navigation_app/widgets/custom_app_bar.dart';
 
 class AdminLoginPage extends StatefulWidget {
   const AdminLoginPage({super.key});
@@ -38,23 +39,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
-      appBar: AppBar(
-        title: Text(
-          'HAUbout That Way',
-          style: TextStyle(
-            color: AppTheme.primaryYellow,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: AppTheme.primaryRed,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      appBar: const CustomAppBar(),
       body: Stack(
         children: [
           // Blurred background image

@@ -2,6 +2,7 @@
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/presentation/building_detail_page.dart';
+import 'package:hau_navigation_app/widgets/custom_app_bar.dart';
 
 
 class BuildingDetailPage extends StatefulWidget {
@@ -81,22 +82,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
-      appBar: AppBar(
-        title: Text(
-          'HAUbout That Way',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: AppTheme.primaryRed,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: CustomAppBar(
         actions: widget.isAdmin ? [
           if (!_editMode)
             IconButton(
