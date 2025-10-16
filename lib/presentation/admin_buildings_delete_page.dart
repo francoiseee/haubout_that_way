@@ -92,7 +92,6 @@ class _AdminBuildingsDeletePageState extends State<AdminBuildingsDeletePage> {
                               });
 
                               if (confirm == true) {
-                                // Return the deleted building name to caller
                                 Navigator.pop(context, name);
                               }
                             },

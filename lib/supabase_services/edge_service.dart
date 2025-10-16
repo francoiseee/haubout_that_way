@@ -14,7 +14,6 @@ class EdgeService {
     return data.map((item) => Edge.fromMap(item as Map<String, dynamic>)).toList();
   }
 
-  /// Update edge distance between two waypoints. Returns true on success.
   Future<bool> updateEdge({required String from, required String to, required double distanceMeters}) async {
     try {
       await SupabaseService.client
@@ -29,8 +28,6 @@ class EdgeService {
     }
   }
 
-  /// Update the endpoints of an edge (from_waypoint/to_waypoint).
-  /// This updates the row matching originalFrom/originalTo to have newFrom/newTo.
   Future<bool> updateEdgeEndpoints({
     required String originalFrom,
     required String originalTo,
@@ -50,7 +47,6 @@ class EdgeService {
     }
   }
 
-  /// Delete an edge (connection) by its endpoints. Returns true on success.
   Future<bool> deleteEdge({required String from, required String to}) async {
     try {
       await SupabaseService.client
@@ -65,7 +61,6 @@ class EdgeService {
     }
   }
 
-  /// Create a new edge (connection) between two waypoints. Returns true on success.
   Future<bool> createEdge({required String from, required String to, double? distanceMeters}) async {
     try {
       final Map<String, dynamic> row = {

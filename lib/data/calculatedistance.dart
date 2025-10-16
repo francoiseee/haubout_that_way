@@ -230,6 +230,6 @@ void main() {
     final b = pair[1];
     final d = dist.as(LengthUnit.Meter, nodes[a]!, nodes[b]!);
     file.writeAsStringSync('$a,$b,${d.toStringAsFixed(2)}\n', mode: FileMode.append);
-    file.writeAsStringSync('$b,$a,${d.toStringAsFixed(2)}\n', mode: FileMode.append); // For bidirectional
+    file.writeAsStringSync('$b,$a,${d.toStringAsFixed(2)}\n', mode: FileMode.append);
   }
 }

@@ -101,7 +101,6 @@ class _AdminBuildingsReadPageState extends State<AdminBuildingsReadPage> {
 															? Text('${(building['offices'] as List).length} office${(building['offices'] as List).length > 1 ? 's' : ''}')
 															: null,
 													onTap: () async {
-														// Open detail; read-only page doesn't allow inline edits
 														await Navigator.push(
 															context,
 															MaterialPageRoute(

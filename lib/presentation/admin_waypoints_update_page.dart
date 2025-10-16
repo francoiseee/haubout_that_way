@@ -36,7 +36,6 @@ class _AdminWaypointsUpdatePageState extends State<AdminWaypointsUpdatePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Only include waypoint keys that follow the 'wp_' naming convention
     final entries = widget.waypoints.entries
         .where((e) => e.key.startsWith('wp_'))
         .toList()
@@ -106,7 +105,6 @@ class _AdminWaypointsUpdatePageState extends State<AdminWaypointsUpdatePage> {
                               IconButton(
                                 icon: const Icon(Icons.edit),
                                 onPressed: () async {
-                                  // Show an edit dialog
                                   final controllerKey = TextEditingController(text: key);
                                   final controllerLat = TextEditingController(text: latlng.latitude.toString());
                                   final controllerLng = TextEditingController(text: latlng.longitude.toString());
@@ -172,12 +170,10 @@ class _AdminWaypointsUpdatePageState extends State<AdminWaypointsUpdatePage> {
 
                                   if (result == true) {
                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Waypoint updated')));
-                                    // Signal to caller that a change occurred
                                     Navigator.pop(context, true);
                                   }
                                 },
                               ),
-                              // copy action removed per request
                             ],
                           ),
                         ),

@@ -2,7 +2,6 @@ import 'package:hau_navigation_app/models/building.dart';
 import 'package:hau_navigation_app/supabase_services/supabase_service.dart';
 
 class BuildingService {
-  // Fetch all buildings
   Future<List<Building>> fetchBuildings() async {
     final data = await SupabaseService.client
         .from('buildings')
@@ -12,7 +11,6 @@ class BuildingService {
     return data.map((item) => Building.fromMap(item as Map<String, dynamic>)).toList();
   }
 
-  // Fetch building by code
   Future<Building?> fetchBuildingByName(String name) async {
     final data = await SupabaseService.client
         .from('buildings')
@@ -24,7 +22,6 @@ class BuildingService {
     return Building.fromMap(data as Map<String, dynamic>);
   }
 
-  // Update building description
   Future<void> updateBuildingDescription(String buildingId, String newDescription) async {
   final response = await SupabaseService.client
       .from('buildings')

@@ -36,7 +36,6 @@ class _AdminBuildingsUpdatePageState extends State<AdminBuildingsUpdatePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Canonical building order matching MapPage's buildingLocations
     final List<String> canonicalOrder = [
       'Entrance',
       'Plaza De Corazon Building (Red Bldg.)',
@@ -62,7 +61,6 @@ class _AdminBuildingsUpdatePageState extends State<AdminBuildingsUpdatePage> {
       'Immaculate Heart Gymnasium Annex',
     ];
 
-    // Filter first, then sort by canonicalOrder if possible
     final filtered = _query.isEmpty
         ? List<Map<String, dynamic>>.from(widget.buildings)
         : widget.buildings

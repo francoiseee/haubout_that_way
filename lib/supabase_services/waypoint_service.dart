@@ -14,8 +14,6 @@ class WaypointService {
     return data.map((item) => Waypoint.fromMap(item as Map<String, dynamic>)).toList();
   }
 
-  /// Update a waypoint identified by [originalKey]. If [newKey] is provided it will
-  /// update the waypoint_key column as well. Returns true on success.
   Future<bool> updateWaypoint({
     required String originalKey,
     required double latitude,
@@ -43,7 +41,6 @@ class WaypointService {
     }
   }
 
-  /// Delete a waypoint by its key. Returns true on success.
   Future<bool> deleteWaypoint(String waypointKey) async {
     try {
       await SupabaseService.client
@@ -57,7 +54,6 @@ class WaypointService {
     }
   }
 
-  /// Create a new waypoint. Returns true on success.
   Future<bool> createWaypoint({required String waypointKey, required double latitude, required double longitude}) async {
     try {
       await SupabaseService.client

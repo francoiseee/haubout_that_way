@@ -6,7 +6,6 @@ import 'package:hau_navigation_app/models/office.dart';
 import 'package:hau_navigation_app/supabase_services/building_service.dart';
 import 'package:hau_navigation_app/supabase_services/office_service.dart';
 
-// Update widget to accept buildingCode
 class BuildingDetailPage extends StatefulWidget {
   final String buildingName;
   final List<String> buildingOffices;
@@ -49,16 +48,15 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     'Room 305',
   ];
 
-  // List of buildings that DON'T have classrooms
   final List<String> _nonAcademicBuildings = [
-    'Plaza De Corazon Building (Red Bldg.)', // Building 1
-    'St. Martha Hall Building', // Building 2
-    'San Francisco De Javier Building (SFJ)', // Building 3
-    'Warehouse & Carpentry', // Building 5
-    'St. Gabriel Hall Building (SGH)', // Building 6
-    'Chapel of the Holy Guardian Angel', // Building 15
-    'Immaculate Heart Gymnasium', // Building 19
-    'Immaculate Heart Gymnasium Annex', // Building 20
+    'Plaza De Corazon Building (Red Bldg.)',
+    'St. Martha Hall Building',
+    'San Francisco De Javier Building (SFJ)',
+    'Warehouse & Carpentry',
+    'St. Gabriel Hall Building (SGH)',
+    'Chapel of the Holy Guardian Angel',
+    'Immaculate Heart Gymnasium',
+    'Immaculate Heart Gymnasium Annex',
     'Yellow Food Court',
     'Entrance',
     'Covered Court'
@@ -115,7 +113,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
 
   String _photoFor(String name) {
     final key = name.trim().toLowerCase();
-    debugPrint('Looking up photo for building name: "$name" (key: "$key")');
     const map = {
       'entrance': 'assets/building_actualpic/entrance.png',
       'st. joseph hall building (sjh)': 'assets/building_actualpic/sjh.png',
@@ -143,10 +140,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       'immaculate heart gymnasium annex':
           'assets/building_actualpic/gym_annex.png',
       'yellow food court': 'assets/building_actualpic/yellowcanteen.png',
-      'archbishop pedro santos building (aps)': 'assets/building_actualpic/aps2.png',
-      'sister josefina nepomuceno formation center':'assets/building_actualpic/formation.png',
-      'st. michael hall building (smh)':'assets/building_actualpic/smh.png',
-      'st. raphael hall building (srh)':'assets/building_actualpic/srh.png'
     };
     return map[key] ?? 'assets/building_actualpic/main-entrance.jpg';
   }
@@ -179,7 +172,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                     onPressed: () {
                       setState(() {
                         _editMode = false;
-                        // Reset to original data when canceling edit
                       });
                     },
                   ),
@@ -188,7 +180,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       ),
       body: Column(
         children: [
-          // Search bar
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -216,7 +207,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
             ),
           ),
 
-          // Building name
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
@@ -230,7 +220,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
             ),
           ),
 
-          // Building content
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(16),
@@ -243,7 +232,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Information title
                     const Text(
                       'Building Information',
                       style: TextStyle(
@@ -253,7 +241,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Building information (editable for admin)
                     _editMode && widget.isAdmin
                         ? TextField(
                             controller: _infoController,
@@ -299,13 +286,10 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Offices section (only show if building has offices)
                     if (_officesList.isNotEmpty) ..._buildOfficesSection(),
 
-                    // Classrooms section (only show for academic buildings)
                     if (_hasClassrooms) ..._buildClassroomsSection(),
 
-                    // Special message for non-academic buildings
                     if (!_hasClassrooms && _officesList.isEmpty)
                       const Center(
                         child: Padding(
@@ -327,7 +311,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
             ),
           ),
 
-          // Action buttons
           ..._buildActionButtons(),
         ],
       ),
@@ -362,7 +345,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       ),
       const SizedBox(height: 10),
 
-      // Offices list
       if (filteredOffices.isEmpty && query.isNotEmpty)
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 12.0),
@@ -431,7 +413,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       ),
       const SizedBox(height: 10),
 
-      // Classrooms list
       if (filteredClassrooms.isEmpty && query.isNotEmpty)
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 12.0),
@@ -449,7 +430,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
                         style: const TextStyle(color: Colors.black),
                         onChanged: (value) {
                           setState(() {
-                            // update the index in the original _classrooms list
                             final originalIndex =
                                 _classrooms.indexWhere((c) => c == entry.value);
                             if (originalIndex != -1)
@@ -477,7 +457,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
     final buttons = <Widget>[];
 
     if (_editMode && widget.isAdmin) {
-      // Show Save Changes button when in edit mode
       buttons.add(
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -499,13 +478,11 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
         ),
       );
     } else {
-      // Show Navigate button when NOT in edit mode
       buttons.add(
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
             onPressed: () {
-              // Handle navigation to this building - directly start navigation
               Navigator.pop(
                 context,
                 _building?.name ?? '',
@@ -570,7 +547,6 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
           _building!.buildingId,
           _infoController.text,
         );
-        // Update Office Names
       }
       for (final office in _officesList) {
         if (office.id.isNotEmpty) {
@@ -578,17 +554,15 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
         }
       }
 
-      // Add new offices
       for (final office in _officesList.where((o) => o.id.isEmpty)) {
         await OfficeService().addOffice(office.name, office.buildingCode);
       }
 
-      // Delete removed offices
       for (final id in _deletedOfficeIds) {
         await OfficeService().deleteOffice(id);
       }
       _deletedOfficeIds.clear();
-      await _fetchOffices(_building!.buildingCode); // Refresh list
+      await _fetchOffices(_building!.buildingCode);
 
       setState(() {
         _editMode = false;

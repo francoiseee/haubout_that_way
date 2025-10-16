@@ -1,4 +1,3 @@
-// presentation/map_page.dart (UPDATED WITH DRAGGABLE LIST, CAMPUS ROUTES, AND USER LOCATION)
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -39,7 +38,6 @@ class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   CampusRoute? _previousSelectedRoute;
 
-  // Location and compass tracking
   Position? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription;
   StreamSubscription<CompassEvent>? _compassStreamSubscription;
@@ -47,34 +45,22 @@ class _MapPageState extends State<MapPage> {
   bool _isLocationEnabled = false;
   bool _isFollowingUser = false;
 
-  // Search functionality
   final TextEditingController _routeSearchController = TextEditingController();
   String _routeSearchQuery = '';
 
-  // Graph data for dummy pathways and shortest-path computation
-  final Map<String, LatLng> _graphNodes = {}; // name -> LatLng
-  final Map<String, Map<String, double>> _graphEdges =
-      {}; // name -> (neighbor -> distance)
+  final Map<String, LatLng> _graphNodes = {};
+  final Map<String, Map<String, double>> _graphEdges = {};
 
-  // Computed shortest path polyline (displayed on map)
   List<LatLng> _computedPath = [];
-  // Whether the user has started a navigation session from BuildingDetailPage
   bool _isNavigating = false;
-  // Track the current navigation target for dynamic path adjustment
   String? _currentNavigationTarget;
-  // Guards for realtime path recomputation when the user moves
   bool _isComputingPath = false;
   DateTime? _lastPathComputeTime;
   LatLng? _lastPathComputePosition;
-  // Minimum time between recomputes and minimum movement distance to trigger recompute
   final Duration _minRecomputeInterval = const Duration(milliseconds: 800);
   final double _minRecomputeDistanceMeters = 1.0;
-  // Track whether the routes bottom sheet is currently open so marker taps can safely close it
   bool _isRoutesSheetOpen = false;
-
-  // Whether waypoint markers are visible (toggleable)
   bool _showWaypoints = true;
-  // Whether building markers are visible (toggleable to better inspect waypoints)
   bool _showBuildings = true;
 
   final List<Map<String, dynamic>> _buildings = [
@@ -193,7 +179,6 @@ class _MapPageState extends State<MapPage> {
     _initializeLocationTracking();
     _initializeCompassTracking();
     _initializeGraphData();
-    // Update search query as the user types so filtering is immediate
     _routeSearchController.addListener(() {
       if (_routeSearchQuery != _routeSearchController.text) {
         setState(() {
@@ -202,7 +187,6 @@ class _MapPageState extends State<MapPage> {
       }
     });
 
-    // Initialize graph nodes and edges after a short delay to ensure markers list exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeGraphData();
     });
@@ -219,21 +203,17 @@ class _MapPageState extends State<MapPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Listen for changes to the selected route
     final selectedRoute = context.watch<CampusRouteViewModel>().selectedRoute;
 
-    // Only animate if a new route has been selected
     if (selectedRoute != null && selectedRoute != _previousSelectedRoute) {
       _fitRouteOnMap(selectedRoute.polylinePoints);
       _previousSelectedRoute = selectedRoute;
     } else if (selectedRoute == null && _previousSelectedRoute != null) {
-      // If a route has been deselected, return to default view
       _mapController.move(const LatLng(15.1341371, 120.5910619), 17.0);
       _previousSelectedRoute = null;
     }
   }
 
-  /// Animates the map's camera to fit the given list of geographical points.
   void _fitRouteOnMap(List<LatLng> points) {
     if (points.isNotEmpty) {
       final bounds = LatLngBounds.fromPoints(points);
@@ -243,7 +223,6 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  /// Request location permission from the user
   Future<void> _requestLocationPermission() async {
     final permission = await Permission.location.request();
     if (permission.isGranted) {
@@ -253,7 +232,6 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  /// Initialize GPS location tracking
   Future<void> _initializeLocationTracking() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
       return;
@@ -271,7 +249,6 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    // Get initial position
     try {
       _currentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
@@ -285,10 +262,9 @@ class _MapPageState extends State<MapPage> {
       debugPrint('Error getting current position: $e');
     }
 
-    // Start listening to position changes
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 1, // Update every 1 meter
+      distanceFilter: 1,
     );
 
     _positionStreamSubscription = Geolocator.getPositionStream(
@@ -301,7 +277,6 @@ class _MapPageState extends State<MapPage> {
         _isLocationEnabled = true;
       });
 
-      // Follow user location if enabled
       if (_isFollowingUser && _currentPosition != null) {
         _mapController.move(
           LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
@@ -309,22 +284,16 @@ class _MapPageState extends State<MapPage> {
         );
       }
 
-      // Dynamic path adjustment during navigation
       if (_isNavigating && _currentNavigationTarget != null) {
-        // Adjust the existing computed path and also consider recomputing
-        // a fresh shortest-path from the user's current location to the
-        // navigation target (rate-limited) so updates appear in real-time.
         if (_computedPath.isNotEmpty) {
           _adjustPathDynamically();
         }
 
-        // Attempt a full recompute when appropriate
         _maybeRecomputePathOnMove();
       }
     });
   }
 
-  /// Initialize compass/heading tracking
   void _initializeCompassTracking() {
     _compassStreamSubscription =
         FlutterCompass.events?.listen((CompassEvent event) {
@@ -333,7 +302,6 @@ class _MapPageState extends State<MapPage> {
           _currentHeading = event.heading!;
         });
 
-        // Rotate map to follow user heading if following is enabled
         if (_isFollowingUser) {
           _mapController.rotate(-_currentHeading);
         }
@@ -341,14 +309,12 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  /// Toggle user location following
   void _toggleLocationFollowing() {
     setState(() {
       _isFollowingUser = !_isFollowingUser;
     });
 
     if (_isFollowingUser) {
-      // If no location yet, set a demo location within HAU campus
       if (_currentPosition == null) {
         setState(() {
           _currentPosition = Position(
@@ -368,20 +334,16 @@ class _MapPageState extends State<MapPage> {
         });
       }
 
-      // Move to user location
       _mapController.move(
         LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
         18.0,
       );
-      // Rotate to user heading
       _mapController.rotate(-_currentHeading);
     } else {
-      // Reset rotation when not following
       _mapController.rotate(0.0);
     }
   }
 
-  /// Build user location marker
   Marker? _buildUserLocationMarker() {
     if (_currentPosition == null) return null;
 
@@ -389,12 +351,10 @@ class _MapPageState extends State<MapPage> {
       point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
       width: 60.0,
       height: 60.0,
-      // rotate with the map so the marker stays aligned to map rotation
       rotate: true,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer pulse circle
           Container(
             width: 60,
             height: 60,
@@ -403,7 +363,6 @@ class _MapPageState extends State<MapPage> {
               color: Colors.blue.withOpacity(0.2),
             ),
           ),
-          // Middle circle
           Container(
             width: 40,
             height: 40,
@@ -412,8 +371,6 @@ class _MapPageState extends State<MapPage> {
               color: Colors.blue.withOpacity(0.4),
             ),
           ),
-          // Inner circle with icon - do not rotate the icon manually; the Marker
-          // will rotate with the map when rotate:true is set above.
           Container(
             width: 24,
             height: 24,
@@ -435,14 +392,12 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Changed from primaryRed to white
+      backgroundColor: Colors.white,
 
-      // Custom App Bar with curved bottom corners (Extended Height)
       appBar: const CustomAppBar(),
 
       body: Stack(
         children: [
-          // Map view (full screen)
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -450,17 +405,14 @@ class _MapPageState extends State<MapPage> {
             ),
             child: Stack(
               children: [
-                // MAIN MAP
                 Consumer<CampusRouteViewModel>(
                   builder: (context, routeViewModel, child) {
                     final selectedRoute = routeViewModel.selectedRoute;
                     final polylines = <Polyline>[];
 
-                    // Debug: log route state and navigation mode
                     debugPrint(
                         'Map Consumer rebuild - selectedRoute: ${selectedRoute?.id ?? 'null'}, _isNavigating: $_isNavigating');
 
-                    // If a route is selected and we're NOT currently navigating, display its polyline
                     if (selectedRoute != null && !_isNavigating) {
                       polylines.add(
                         Polyline(
@@ -471,14 +423,12 @@ class _MapPageState extends State<MapPage> {
                       );
                     }
 
-                    // Build waypoint graph polylines (black) from _graphEdges/_graphNodes
                     final graphPolylines = <Polyline>[];
                     try {
                       for (final from in _graphEdges.keys) {
                         final neighbors = _graphEdges[from];
                         if (neighbors == null) continue;
                         for (final to in neighbors.keys) {
-                          // avoid duplicate edges by enforcing an ordering
                           if (from.compareTo(to) >= 0) continue;
                           final a = _graphNodes[from];
                           final b = _graphNodes[to];
@@ -486,7 +436,7 @@ class _MapPageState extends State<MapPage> {
                           graphPolylines.add(
                             Polyline(
                               points: [a, b],
-                              color: Colors.black, //PATHWAY COLOR
+                              color: Colors.black,
                               strokeWidth: 2.0,
                             ),
                           );
@@ -500,7 +450,7 @@ class _MapPageState extends State<MapPage> {
                       mapController: _mapController,
                       options: const MapOptions(
                         initialCenter:
-                            LatLng(15.132896, 120.590068), // HAU coordinates
+                            LatLng(15.132896, 120.590068),
                         initialZoom: 17.0,
                         minZoom: 15.0,
                         maxZoom: 19.0,
@@ -516,16 +466,13 @@ class _MapPageState extends State<MapPage> {
                                 '© OpenStreetMap contributors © CARTO',
                           },
                         ),
-                        // Route polylines layer (selected campus route)
                         PolylineLayer(polylines: polylines),
 
-                        // Waypoint / graph edges (always visible, black)
                         if (graphPolylines.isNotEmpty)
                           PolylineLayer(
                             polylines: graphPolylines,
                           ),
 
-                        // Computed shortest path (if any) - draw in red on top of graph
                         if (_computedPath.isNotEmpty)
                           PolylineLayer(
                             polylines: [
@@ -536,20 +483,16 @@ class _MapPageState extends State<MapPage> {
                               ),
                             ],
                           ),
-                        // Building markers layer + waypoint node markers
                         MarkerLayer(
                           markers: [
-                            // Building markers (can be toggled off to inspect waypoints)
                             if (_showBuildings) ..._buildMapMarkers(),
 
-                            // Waypoint nodes (from external data file) - small blue circles
                             if (widget.isAdmin && _showWaypoints)
                               for (final entry in _graphNodes.entries)
                                 Marker(
                                   point: entry.value,
                                   width: 18,
                                   height: 18,
-                                  // rotate with the map so waypoints follow map rotation
                                   rotate: true,
                                   child: Stack(
                                     alignment: Alignment.center,
@@ -564,7 +507,6 @@ class _MapPageState extends State<MapPage> {
                                               color: Colors.white, width: 1.5),
                                         ),
                                       ),
-                                      // Numeric label based on ordered keys (1-based)
                                       Builder(builder: (ctx) {
                                         try {
                                           final idx = _graphNodes.keys
@@ -588,7 +530,6 @@ class _MapPageState extends State<MapPage> {
                                   ),
                                 ),
 
-                            // User location marker if available
                             if (_buildUserLocationMarker() != null)
                               _buildUserLocationMarker()!,
                           ],
@@ -598,30 +539,6 @@ class _MapPageState extends State<MapPage> {
                   },
                 ),
 
-                /* COMMENT START
-                // Search bar (positioned at top of map)
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  right: 60,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search building...',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    ),
-                    style: const TextStyle(color: Colors.black),
-                  ),
-                ),
-                */ //COMMENT START
-
-                // Location control button
                 Positioned(
                   top: 16,
                   right: 16,
@@ -653,7 +570,6 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ),
 
-                // Building markers visibility toggle (appears below location button)
                 Positioned(
                   top: 72,
                   right: 16,
@@ -686,7 +602,6 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ),
 
-                // Waypoint markers visibility toggle (appears below building toggle)
                 if (widget.isAdmin)
                   Positioned(
                     top: 128,
@@ -719,7 +634,6 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
 
-                // Compass indicator (when following location)
                 if (_isFollowingUser && _isLocationEnabled)
                   Positioned(
                     top: 16,
@@ -751,130 +665,11 @@ class _MapPageState extends State<MapPage> {
               ],
             ),
           ),
-
-          /* COMMENT START
-          // Draggable buildings list
-          DraggableScrollableSheet(
-            initialChildSize: 0.15, // Initial height (15% of screen)
-            minChildSize: 0.15,     // Minimum height (15% of screen)
-            maxChildSize: 0.7,      // Maximum height (70% of screen)
-            builder: (BuildContext context, ScrollController scrollController) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    // Drag handle
-                    Container(
-                      width: 60,
-                      height: 5,
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    
-                    // List header
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Text(
-                        'HAU Buildings (${_buildings.length} buildings)',
-                        style: const TextStyle(
-                          color: AppTheme.primaryRed,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    
-                    // Divider
-                    const Divider(height: 1, thickness: 1),
-                    
-                    // Buildings list
-                    Expanded(
-                      child: ListView.builder(
-                        controller: scrollController,
-                        itemCount: _buildings.length,
-                        itemBuilder: (context, index) {
-                          final building = _buildings[index];
-                          final hasOffices = (building['offices'] as List).isNotEmpty;
-                          
-                          return ListTile(
-                            leading: Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryRed,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${index + 1}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              building['name'] as String,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: hasOffices 
-                                ? Text(
-                                    '${(building['offices'] as List).length} office${(building['offices'] as List).length > 1 ? 's' : ''}',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                    ),
-                                  )
-                                : null,
-                            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => BuildingDetailPage(
-                                    buildingName: building['name'] as String,
-                                    buildingOffices: List<String>.from(building['offices'] as List),
-                                    isAdmin: widget.isAdmin,
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          */ //COMMENT END
         ],
       ),
-      // Floating action button to show routes bottom sheet
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Admin controls FAB (only visible to admins)
           if (widget.isAdmin)
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
@@ -886,7 +681,6 @@ class _MapPageState extends State<MapPage> {
               ),
             ),
 
-          // Primary routes FAB
           FloatingActionButton(
             backgroundColor: AppTheme.primaryRed,
             onPressed: () => _showRoutesBottomSheet(context),
@@ -895,7 +689,6 @@ class _MapPageState extends State<MapPage> {
           ),
         ],
       ),
-      // Show a small stop-navigation button while in navigation mode
       persistentFooterButtons: _isNavigating
           ? [
               Container(
@@ -924,7 +717,6 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  /// Shows the campus routes selection bottom sheet
   void _showRoutesBottomSheet(BuildContext context) {
     setState(() {
       _isRoutesSheetOpen = true;
@@ -936,7 +728,6 @@ class _MapPageState extends State<MapPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => _buildRoutesBottomSheet(),
     ).whenComplete(() {
-      // Bottom sheet closed
       if (mounted) {
         setState(() {
           _isRoutesSheetOpen = false;
@@ -945,7 +736,6 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  /// Builds the routes selection bottom sheet
   Widget _buildRoutesBottomSheet() {
     return Consumer<CampusRouteViewModel>(
       builder: (context, routeViewModel, child) {
@@ -962,7 +752,6 @@ class _MapPageState extends State<MapPage> {
               ),
               child: Column(
                 children: [
-                  // Handle
                   Container(
                     width: 60,
                     height: 5,
@@ -973,7 +762,6 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
 
-                  // Header
                   Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -990,7 +778,6 @@ class _MapPageState extends State<MapPage> {
                   ),
                   const Divider(),
 
-                  // Search field
                   Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -998,7 +785,7 @@ class _MapPageState extends State<MapPage> {
                       controller: _routeSearchController,
                       style: const TextStyle(
                           color: Colors
-                              .black), // Explicitly set text color to black
+                              .black),
                       decoration: InputDecoration(
                         hintText: 'Search building...',
                         hintStyle: const TextStyle(color: Colors.grey),
@@ -1029,7 +816,6 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
 
-                  // Buildings list (replaces routes list) - same content/function as the draggable buildings list
                   Expanded(
                     child: Builder(
                       builder: (context) {
@@ -1115,12 +901,9 @@ class _MapPageState extends State<MapPage> {
                                 trailing: const Icon(Icons.arrow_forward_ios,
                                     size: 16),
                                 onTap: () async {
-                                  // First close the bottom sheet so the user returns to the full map
                                   Navigator.pop(modalContext);
-                                  // Small delay to allow the sheet to dismiss cleanly before pushing a new route
                                   await Future.delayed(
                                       const Duration(milliseconds: 150));
-                                  // Then push the building detail page from the main MapPage context
                                   _pushBuildingDetailAndHandleNavigation(
                                     building['name'] as String,
                                     List<String>.from(
@@ -1143,9 +926,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  /// Shows the admin controls bottom sheet (create/update/delete placeholders)
   void _showAdminControlsBottomSheet(BuildContext context) {
-    // show admin bottom sheet (no local open-state tracked)
 
     showModalBottomSheet(
       context: context,
@@ -1155,7 +936,6 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  /// Admin bottom sheet UI with placeholder buttons for managing entities
   Widget _buildAdminControlsBottomSheet() {
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
@@ -1206,7 +986,6 @@ class _MapPageState extends State<MapPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Buildings card
                     Card(
                       elevation: 2,
                       child: Padding(
@@ -1223,7 +1002,6 @@ class _MapPageState extends State<MapPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                // First row: Create | Read
                                 Row(
                                   children: [
                                     Expanded(
@@ -1281,7 +1059,6 @@ class _MapPageState extends State<MapPage> {
                                                         decoration: const InputDecoration(labelText: 'Photo URL or asset path'),
                                                       ),
                                                       const SizedBox(height: 12),
-                                                      // Offices input (stacked with a thin right-aligned Add button)
                                                       TextField(
                                                         controller: officeInput,
                                                         style: const TextStyle(color: Colors.black),
@@ -1321,7 +1098,6 @@ class _MapPageState extends State<MapPage> {
                                                       const SizedBox(height: 8),
                                                       if (offices.isNotEmpty) buildChips(offices),
                                                       const SizedBox(height: 12),
-                                                      // Classrooms input (stacked with a thin right-aligned Add button)
                                                       TextField(
                                                         controller: classInput,
                                                         style: const TextStyle(color: Colors.black),
@@ -1378,7 +1154,6 @@ class _MapPageState extends State<MapPage> {
                                                           return;
                                                         }
 
-                                                        // Append new building to the in-memory list
                                                         setState(() {
                                                           _buildings.add({
                                                             'name': name,
@@ -1399,7 +1174,6 @@ class _MapPageState extends State<MapPage> {
                                           );
 
                                           if (created == true) {
-                                            // refresh UI and close admin sheet
                                             setState(() {});
                                             try { Navigator.pop(context); } catch (_) {}
                                           }
@@ -1413,13 +1187,11 @@ class _MapPageState extends State<MapPage> {
                                     Expanded(
                                       child: ElevatedButton.icon(
                                         onPressed: () async {
-                                          // Close admin sheet, then open dedicated Read page
                                           try {
                                             Navigator.pop(context);
                                           } catch (_) {}
                                           await Future.delayed(const Duration(milliseconds: 150));
 
-                                          // Open the dedicated AdminBuildingsUpdatePage and await a navigation request result
                                           final result = await Navigator.push<String?>(
                                             context,
                                             MaterialPageRoute(
@@ -1430,8 +1202,6 @@ class _MapPageState extends State<MapPage> {
                                             ),
                                           );
 
-                                          // If the read page returned a building name (START NAVIGATION),
-                                          // handle it the same as when BuildingDetailPage returns.
                                           if (result is String && result.isNotEmpty) {
                                             setState(() {
                                               _isNavigating = true;
@@ -1450,13 +1220,11 @@ class _MapPageState extends State<MapPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                // Second row: Update | Delete
                                 Row(
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
                                         onPressed: () async {
-                                          // Close admin sheet, then reuse the Read page as the Update entrypoint
                                           try {
                                             Navigator.pop(context);
                                           } catch (_) {}
@@ -1468,7 +1236,6 @@ class _MapPageState extends State<MapPage> {
                                               builder: (context) => AdminBuildingsUpdatePage(
                                                 buildings: _buildings,
                                                 isAdmin: widget.isAdmin,
-                                                // The read page is the starting point for update flows as well
                                               ),
                                             ),
                                           );
@@ -1506,7 +1273,6 @@ class _MapPageState extends State<MapPage> {
                                           );
 
                                           if (result is String && result.isNotEmpty) {
-                                            // If a building name was returned (deleted), attempt to treat it as a navigation target like the read pages do
                                             setState(() {
                                               _isNavigating = true;
                                               try {
@@ -1531,7 +1297,6 @@ class _MapPageState extends State<MapPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Waypoints card
                     Card(
                       elevation: 2,
                       child: Padding(
@@ -1548,13 +1313,11 @@ class _MapPageState extends State<MapPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                // First row: Create | Read
                                 Row(
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
                                         onPressed: () async {
-                                          // Show create dialog with empty fields
                                           final controllerKey = TextEditingController();
                                           final controllerLat = TextEditingController();
                                           final controllerLng = TextEditingController();
@@ -1615,7 +1378,6 @@ class _MapPageState extends State<MapPage> {
 
                                           if (created == true) {
                                             _initializeGraphData();
-                                            // close admin sheet (if still open)
                                             try { Navigator.pop(context); } catch (_) {}
                                           }
                                         },
@@ -1633,7 +1395,6 @@ class _MapPageState extends State<MapPage> {
                                           } catch (_) {}
                                           await Future.delayed(const Duration(milliseconds: 150));
 
-                                          // Open the dedicated waypoints update page and pass the current graph nodes
                                           final changed = await Navigator.push<bool?>(
                                             context,
                                             MaterialPageRoute(
@@ -1644,7 +1405,6 @@ class _MapPageState extends State<MapPage> {
                                           );
 
                                           if (changed == true) {
-                                            // Re-fetch waypoints from database
                                             _initializeGraphData();
                                           }
                                         },
@@ -1656,7 +1416,6 @@ class _MapPageState extends State<MapPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                // Second row: Update | Delete
                                 Row(
                                   children: [
                                     Expanded(
@@ -1721,7 +1480,6 @@ class _MapPageState extends State<MapPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Connections card
                     Card(
                       elevation: 2,
                       child: Padding(
@@ -1738,13 +1496,11 @@ class _MapPageState extends State<MapPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                // First row: Create | Read
                                 Row(
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
                                         onPressed: () async {
-                                          // Create connection dialog (empty values)
                                           String fromSel = '';
                                           String toSel = '';
 
@@ -1913,7 +1669,6 @@ class _MapPageState extends State<MapPage> {
                                           } catch (_) {}
                                           await Future.delayed(const Duration(milliseconds: 150));
 
-                                          // Open connections update page with current edges
                                           final edges = await EdgeService().fetchEdges();
                                           final changed = await Navigator.push<bool?>(
                                             context,
@@ -1934,7 +1689,6 @@ class _MapPageState extends State<MapPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                // Second row: Update | Delete
                                 Row(
                                   children: [
                                     Expanded(
@@ -2019,9 +1773,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  // Method to create markers for FlutterMap
   List<Marker> _buildMapMarkers() {
-    // Building locations - coordinates will be updated from waypoints if mapped
     final List<Map<String, dynamic>> buildingLocations = [
       {
         'name': 'Entrance',
@@ -2135,11 +1887,6 @@ class _MapPageState extends State<MapPage> {
       },
     ];
 
-    // Populate graph node positions for later shortest-path usage
-    // If a building is mapped to a waypoint in wpdata.buildingToWaypoints,
-    // place its marker at the waypoint coordinates but DO NOT add a separate
-    // graph node for the building. Routing will target the waypoint key
-    // instead (single source of truth), which avoids duplicate edges.
     for (var b in buildingLocations) {
       final name = b['name'] as String;
       try {
@@ -2150,37 +1897,12 @@ class _MapPageState extends State<MapPage> {
           final wp = _graphNodes[mapped.first]!;
           b['lat'] = wp.latitude;
           b['lng'] = wp.longitude;
-          // Skip adding a separate graph node for this building; the waypoint
-          // node will be used for routing instead.
           continue;
         }
       } catch (_) {}
 
-      // Add building as graph node when no waypoint mapping exists
       _graphNodes[b['name'] as String] = LatLng(b['lat'], b['lng']);
     }
-
-    // -----------------------------------------------------------------
-    // CUSTOM PATHWAYS (optional)
-    // If you have a hand-drawn or surveyed pedestrian path network (preferred
-    // for accuracy), add your additional waypoint nodes here. These should be
-    // named uniquely and assigned LatLng coordinates. Example:
-    //
-    // _graphNodes['walkway_node_1'] = LatLng(15.1330, 120.5905);
-    // _graphNodes['walkway_node_2'] = LatLng(15.1332, 120.5907);
-    //
-    // After adding custom nodes, you can either rely on the auto-generation
-    // in `_initializeGraphData()` (it will connect nearest neighbors), or
-    // you can manually define exact edges in `_graphEdges` (recommended for
-    // precise walkway shapes). See `_initializeGraphData()` comments below
-    // for an example of how to manually define edges.
-    // Example waypoint nodes (replace these with your surveyed walkway waypoints)
-    // These are small examples placed near existing buildings and will be used
-    // to create more realistic pedestrian routes when connected via edges.
-    // You can add as many as you need; use descriptive names.
-    // Merge waypoint nodes from external data file (edit lib/data/waypoints.dart)
-
-    // -----------------------------------------------------------------
 
     return buildingLocations
         .where((building) => building['lat'] != null && building['lng'] != null)
@@ -2189,23 +1911,16 @@ class _MapPageState extends State<MapPage> {
         point: LatLng(building['lat'], building['lng']),
         width: 80.0,
         height: 80.0,
-        // rotate with the map so building markers follow map rotation
         rotate: true,
         child: GestureDetector(
           onTap: () async {
-            // Close the routes bottom sheet if it's open so the user returns to the full map
             if (_isRoutesSheetOpen) {
               try {
                 Navigator.of(context).pop();
-                // allow the modal dismissal animation to complete
                 await Future.delayed(const Duration(milliseconds: 150));
               } catch (_) {}
             }
 
-            // Do not compute path here. Path computation should occur only when
-            // the user explicitly confirms navigation (START NAVIGATION) in the
-            // BuildingDetailPage. This avoids starting routing prematurely.
-            // Then navigate to the building detail page
             final buildingData = _buildings.firstWhere(
               (b) => b['name'] == building['name'],
               orElse: () => {'name': building['name'], 'offices': []},
@@ -2216,13 +1931,12 @@ class _MapPageState extends State<MapPage> {
               List<String>.from(buildingData['offices'] as List),
             );
           },
-          //LOCATION POINTS
           child: Transform.rotate(
             angle: _isFollowingUser ? _currentHeading * math.pi / 180 : 0,
             child: Column(
               children: [
                 _buildBuildingMarkerIcon(
-                    building['name'] as String), // <-- ICON DISPLAYED HERE
+                    building['name'] as String),
                 const SizedBox(height: 4),
                 Container(
                   padding:
@@ -2256,57 +1970,25 @@ class _MapPageState extends State<MapPage> {
     }).toList();
   }
 
-  // Initializes dummy graph edges connecting nearby buildings.
-  // This creates a fully connected-ish local graph by linking each node to a few nearest neighbors.
   Future<void> _initializeGraphData() async {
-    // Clear any existing
     _graphNodes.clear();
     _graphEdges.clear();
 
-    // Fetch waypoints and edges from Supabase
     final waypoints = await WaypointService().fetchWaypoints();
     final edges = await EdgeService().fetchEdges();
 
-    // Convert waypoints to Map<String, LatLng>
     setState(() {
       for (var wp in waypoints) {
         _graphNodes[wp.waypointKey] = LatLng(wp.latitude, wp.longitude);
       }
 
-      // Convert edges to Map<String, Map<String, double>>
       for (var edge in edges) {
         _graphEdges.putIfAbsent(edge.fromWaypoint, () => {});
         _graphEdges[edge.fromWaypoint]![edge.toWaypoint] = edge.distanceMeters;
       }
     });
-
-    // -----------------------------------------------------------------
-    // MANUAL EDGE DEFINITION (optional, recommended for accurate paths)
-    //
-    // If you have a precise pedestrian graph (waypoints and explicit edges),
-    // you can override or augment the auto-generated edges here. Example:
-    //
-    // _graphEdges['walkway_node_1'] = {
-    //   'walkway_node_2': Distance().as(LengthUnit.Meter, _graphNodes['walkway_node_1']!, _graphNodes['walkway_node_2']!),
-    //   'walkway_node_3': Distance().as(LengthUnit.Meter, _graphNodes['walkway_node_1']!, _graphNodes['walkway_node_3']!),
-    // };
-    // _graphEdges['walkway_node_2'] = {
-    //   'walkway_node_1': ...,
-    //   'walkway_node_4': ...,
-    // };
-    //
-    // Important: ensure both directions are present when you want bidirectional
-    // travel, or add reverse edges explicitly as shown above.
-    // -----------------------------------------------------------------
-
-    // Note: building->waypoint connections are intentionally NOT added here.
-    // Buildings that are mapped to waypoints are represented by the waypoint
-    // node (see _buildMapMarkers). Routing will target the waypoint key
-    // instead of creating separate building nodes/edges. This avoids
-    // duplicated edges and keeps the waypoint the single source of truth.
   }
 
-  // Dijkstra's algorithm to find shortest path between two node names
   List<String> _dijkstra(String startNode, String targetNode) {
     final distances = <String, double>{};
     final previous = <String, String?>{};
@@ -2319,7 +2001,6 @@ class _MapPageState extends State<MapPage> {
     distances[startNode] = 0.0;
 
     while (nodes.isNotEmpty) {
-      // get node with smallest tentative distance
       String u = nodes.reduce((a, b) =>
           (distances[a] ?? double.infinity) < (distances[b] ?? double.infinity)
               ? a
@@ -2342,7 +2023,6 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
-    // Reconstruct path
     final path = <String>[];
     String? u = targetNode;
     if (previous[u] != null || u == startNode) {
@@ -2354,16 +2034,14 @@ class _MapPageState extends State<MapPage> {
     return path;
   }
 
-  /// Dynamically adjust the path based on user's current position
   void _adjustPathDynamically() {
     if (_currentPosition == null || _computedPath.isEmpty) return;
 
     final currentPos =
         LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
-    const double proximityThreshold = 15.0; // 15 meters
-    const double deviationThreshold = 50.0; // 50 meters
+    const double proximityThreshold = 15.0;
+    const double deviationThreshold = 50.0;
 
-    // Check if user is close to any point in the computed path
     bool foundClosePoint = false;
     int closestPointIndex = -1;
     double closestDistance = double.infinity;
@@ -2380,7 +2058,6 @@ class _MapPageState extends State<MapPage> {
     }
 
     if (foundClosePoint && closestPointIndex > 0) {
-      // User is close to a point in the path, remove previous points
       debugPrint('User reached point $closestPointIndex, reducing path');
       setState(() {
         _computedPath = [
@@ -2389,7 +2066,6 @@ class _MapPageState extends State<MapPage> {
         ];
       });
     } else {
-      // Check if user has deviated significantly from the path
       double minDistanceToPath = double.infinity;
       for (final pathPoint in _computedPath) {
         final distance = Distance().as(LengthUnit.Meter, currentPos, pathPoint);
@@ -2399,7 +2075,6 @@ class _MapPageState extends State<MapPage> {
       }
 
       if (minDistanceToPath > deviationThreshold) {
-        // User has deviated from path, recalculate
         debugPrint(
             'User deviated from path (${minDistanceToPath.toStringAsFixed(1)}m), recalculating');
         _computePathFromCurrentTo(_currentNavigationTarget!);
@@ -2407,39 +2082,33 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  // Compute shortest path from current location to a building name and set _computedPath
   void _computePathFromCurrentTo(String buildingName) {
     if (_currentPosition == null) {
-      // No user location; cannot compute path
       return;
     }
 
-    // Find the target waypoint key for this building (if mapped)
-    String targetNode = 'wp_Entrance'; // Default to Entrance if not found
+    String targetNode = 'wp_Entrance';
     try {
       String normalizedName = buildingName.trim();
       final mapped = wpdata.buildingToWaypoints[normalizedName];
       if (mapped != null && mapped.isNotEmpty) {
-        targetNode = mapped.first; // Use the mapped waypoint key
+        targetNode = mapped.first;
       }
     } catch (_) {}
 
     debugPrint('All graph node keys: ${_graphNodes.keys.toList()}');
     debugPrint('Target node for $buildingName: $targetNode');
 
-    // Ensure target node exists in graph
     if (!_graphNodes.containsKey(targetNode)) {
       debugPrint('Target node $targetNode not found in graph');
       return;
     }
 
-    // Find nearest graph node to current position (only from waypoints, not buildings)
     final currentPos =
         LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
     String? nearestNodeToUser;
     double nearestDist = double.infinity;
 
-    // Only consider waypoint nodes (exclude building nodes that aren't mapped to waypoints)
     for (final entry in _graphNodes.entries) {
       final pos = entry.value;
       final d = Distance().as(LengthUnit.Meter, currentPos, pos);
@@ -2462,12 +2131,9 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    // Convert nodePath to LatLng list
     final nodePositions = <LatLng>[];
-    // Start with the user's exact current location
     nodePositions.add(currentPos);
 
-    // Add each waypoint in the path
     for (final node in nodePath) {
       final pos = _graphNodes[node];
       if (pos != null) {
@@ -2475,7 +2141,6 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
-    // Use the path as-is without densification to preserve exact waypoint routing
     setState(() {
       _computedPath = nodePositions;
       _currentNavigationTarget = buildingName;
@@ -2484,9 +2149,6 @@ class _MapPageState extends State<MapPage> {
     debugPrint('Path computed with ${nodePositions.length} points');
   }
 
-  // Push the BuildingDetailPage and await a navigation request result.
-  // If the detail page returns a building name (when user taps START NAVIGATION),
-  // compute and display the shortest path to that building.
   Future<void> _pushBuildingDetailAndHandleNavigation(
       String buildingName, List<String> offices) async {
     final result = await Navigator.push(
@@ -2501,25 +2163,17 @@ class _MapPageState extends State<MapPage> {
     );
 
     if (result is String && result.isNotEmpty) {
-      // result is the building name requested for navigation
-      // Enter navigation mode and clear any selected campus route so the computed path is visible immediately
       setState(() {
         _isNavigating = true;
-        // Clear selection in the viewmodel (notify listeners)
         try {
           context.read<CampusRouteViewModel>().clearSelection();
         } catch (_) {}
       });
-
-      // Compute path from current location to requested building
-      // The _computePathFromCurrentTo method will handle waypoint mapping internally
       _computePathFromCurrentTo(result);
     }
   }
 
-  // Resolve the asset path for a building's logo in assets/building_logo
   String? _buildingLogoAsset(String fullName) {
-    // Use contains to match names that include abbreviations in parentheses
     if (fullName.contains('Plaza De Corazon'))
       return 'assets/building_logo/Plaza De Corazon Building.png';
     if (fullName.contains('St. Martha Hall'))
@@ -2568,11 +2222,9 @@ class _MapPageState extends State<MapPage> {
     return null;
   }
 
-  // Build a marker widget using the building logo with a circular style and white border
   Widget _buildBuildingMarkerIcon(String buildingName) {
     final asset = _buildingLogoAsset(buildingName);
     if (asset == null) {
-      // Fallback to current yellow dot style
       return Container(
         width: 24,
         height: 24,
@@ -2610,7 +2262,6 @@ class _MapPageState extends State<MapPage> {
         asset,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          // Fallback to yellow dot if asset not found
           return Container(
             color: AppTheme.primaryYellow,
             child: const Icon(Icons.location_on, color: Colors.white),
@@ -2621,7 +2272,6 @@ class _MapPageState extends State<MapPage> {
   }
 
   String _getAbbreviatedName(String fullName) {
-    // Return abbreviated names for map markers (arranged in same order as _buildings list)
     if (fullName.contains('Plaza De Corazon')) return 'Red Bldg.';
     if (fullName.contains('St. Martha Hall')) return 'SMH Hall';
     if (fullName.contains('San Francisco De Javier')) return 'SFJ';
@@ -2646,13 +2296,10 @@ class _MapPageState extends State<MapPage> {
     if (fullName.contains('Immaculate Heart Gymnasium')) return 'Gymnasium';
     if (fullName.contains('Yellow Food Court')) return 'Food Court';
 
-    // Fallback: return first 2 words for any unmatched buildings
     final words = fullName.split(' ');
     return words.length > 2 ? '${words[0]} ${words[1]}' : fullName;
   }
 
-  /// Attempt to recompute the shortest path when the user moves.
-  /// Uses simple guards to avoid spamming computation on every small position update.
   void _maybeRecomputePathOnMove() {
     if (!_isNavigating ||
         _currentNavigationTarget == null ||
@@ -2660,10 +2307,8 @@ class _MapPageState extends State<MapPage> {
 
     final now = DateTime.now();
 
-    // Prevent concurrent recomputes
     if (_isComputingPath) return;
 
-    // Throttle by time
     if (_lastPathComputeTime != null) {
       final since = now.difference(_lastPathComputeTime!);
       if (since < _minRecomputeInterval) return;
@@ -2672,19 +2317,16 @@ class _MapPageState extends State<MapPage> {
     final currentPos =
         LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
 
-    // Throttle by movement distance
     if (_lastPathComputePosition != null) {
       final dist = Distance()
           .as(LengthUnit.Meter, _lastPathComputePosition!, currentPos);
       if (dist < _minRecomputeDistanceMeters) return;
     }
 
-    // Passed guards: recompute path
     _isComputingPath = true;
     _lastPathComputeTime = now;
     _lastPathComputePosition = currentPos;
 
-    // Run recompute asynchronously and clear the computing flag when done
     Future.microtask(() {
       try {
         _computePathFromCurrentTo(_currentNavigationTarget!);

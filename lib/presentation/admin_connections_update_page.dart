@@ -7,7 +7,6 @@ import 'package:hau_navigation_app/supabase_services/waypoint_service.dart';
 Future<String?> _showSearchableChooser(BuildContext context, String initial) async {
   final TextEditingController _search = TextEditingController();
 
-  // Fetch current waypoint keys from the database each time the chooser opens
   final wps = await WaypointService().fetchWaypoints();
   final List<String> options = wps.map((w) => w.waypointKey).toList()..sort();
   List<String> filtered = List.from(options);
@@ -94,7 +93,6 @@ class _AdminConnectionsUpdatePageState extends State<AdminConnectionsUpdatePage>
     super.dispose();
   }
   
-  // waypoint keys are fetched dynamically by the chooser dialog
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +139,6 @@ class _AdminConnectionsUpdatePageState extends State<AdminConnectionsUpdatePage>
                           trailing: IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () async {
-                              // Open an edit dialog with searchable dropdowns for from/to
                               String fromSel = c.fromWaypoint;
                               String toSel = c.toWaypoint;
 
@@ -221,7 +218,6 @@ class _AdminConnectionsUpdatePageState extends State<AdminConnectionsUpdatePage>
                                     actions: [
                                       TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
                                       ElevatedButton(onPressed: () async {
-                                        // Local validation
                                         if (fromSel == toSel) {
                                           setState(() => validationError = 'From and To cannot be the same waypoint');
                                           return;
@@ -232,7 +228,6 @@ class _AdminConnectionsUpdatePageState extends State<AdminConnectionsUpdatePage>
                                           return;
                                         }
 
-                                        // Confirm before saving
                                         final confirm = await showDialog<bool>(context: context, builder: (context) {
                                           return AlertDialog(
                                             title: const Text('Confirm change'),

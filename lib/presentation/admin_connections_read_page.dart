@@ -1,4 +1,3 @@
-// Keep a compatibility export pointing to the new UpdatePage filename so older imports keep working.
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/models/edge.dart';
