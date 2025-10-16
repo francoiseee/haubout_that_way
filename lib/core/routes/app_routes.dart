@@ -1,14 +1,10 @@
-// presentation/app_routes.dart (SIMPLIFIED VERSION)
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/presentation/home_page.dart';
 import 'package:hau_navigation_app/presentation/start_page.dart';
 import 'package:hau_navigation_app/presentation/visitor_admin_page.dart';
-import 'package:hau_navigation_app/presentation/map_page.dart';
-import 'package:hau_navigation_app/presentation/building_detail_page.dart';
 import 'package:hau_navigation_app/presentation/admin_login_page.dart';
 
 class AppRoutes {
-  // Route constants
   static const String startRoute = '/start';
   static const String homeRoute = '/home';
   static const String visitorAdminRoute = '/visitor-admin';

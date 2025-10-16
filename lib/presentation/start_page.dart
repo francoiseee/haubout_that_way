@@ -1,4 +1,3 @@
-// presentation/start_page.dart
 import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/presentation/home_page.dart';
 
@@ -10,6 +9,6 @@ class StartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const HomePage(); // Redirect to HomePage which contains all the functionality
+    return const HomePage();
   }
 }

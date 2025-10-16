@@ -2,32 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/widgets/hau_logo.dart';
 
-/// A reusable custom app bar widget for HAU navigation app
-/// 
-/// This widget provides a consistent navigation bar design across the app
-/// with HAU branding, curved bottom corners, and customizable options.
-/// 
-/// Example usage:
-/// ```dart
-/// // Basic usage with default settings
-/// appBar: const CustomAppBar(),
-/// 
-/// // With custom title and actions
-/// appBar: CustomAppBar(
-///   title: 'Custom Page Title',
-///   actions: [
-///     IconButton(
-///       icon: const Icon(Icons.settings, color: Colors.white),
-///       onPressed: () => _openSettings(),
-///     ),
-///   ],
-/// ),
-/// 
-/// // Without back button
-/// appBar: const CustomAppBar(
-///   showBackButton: false,
-/// ),
-/// ```
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback? onBackPressed;
@@ -70,7 +44,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Back button or empty space
                 if (showBackButton)
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -79,7 +52,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 else
                   const SizedBox(width: 48),
                 
-                // Title with logo
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -100,14 +72,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ],
                 ),
                 
-                // Actions or empty space to balance
                 if (actions != null && actions!.isNotEmpty)
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: actions!,
                   )
                 else
-                  const SizedBox(width: 48), // Same width as IconButton
+                  const SizedBox(width: 48),
               ],
             ),
           ),

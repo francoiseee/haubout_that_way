@@ -1,9 +1,3 @@
-// Waypoints and example pathway edges for HAU campus
-// - `initialGraphNodes` contains named waypoint LatLngs you can edit or extend.
-// - `initialGraphEdges` contains distances between those waypoint nodes.
-//   These are example intra-waypoint edges; edges that connect to building
-//   nodes should be added in `map_page.dart` after merging nodes.
-
 import 'package:latlong2/latlong.dart';
 
 final Map<String, LatLng> initialGraphNodes = {
@@ -107,10 +101,6 @@ final Map<String, LatLng> initialGraphNodes = {
   'wp_76': const LatLng(15.133069,120.589601),
 };
 
-// Pre-compute distances between the example waypoint nodes. These edges are
-// only between the waypoint nodes themselves. Map edges connecting waypoints
-// to buildings are added in `map_page.dart` so they can reference building
-// node coordinates there.
 final Map<String, Map<String, double>> initialGraphEdges = () {
   final dist = Distance();
   final Map<String, Map<String, double>> edges = {};
@@ -242,10 +232,6 @@ final Map<String, Map<String, double>> initialGraphEdges = () {
   return edges;
 }();
 
-// Optional: map of building node names (as they appear in map_page.dart) to
-// nearby waypoint node keys. Use this to automatically connect buildings to
-// the waypoint network. Edit these mappings to match the nearest waypoint
-// to each building for realistic routing.
 final Map<String, List<String>> buildingToWaypoints = {
   'Peter G. Nepomuceno Building (PGN)': ['wp_PGN'],
   'Geromin G. Nepomuceno Building (GGN)': ['wp_GGN'],
@@ -268,21 +254,11 @@ final Map<String, List<String>> buildingToWaypoints = {
   'Covered Court': ['wp_Covered_Court'],
   'Immaculate Heart Gymnasium': ['wp_IH_Gym'],
   'Immaculate Heart Gymnasium Annex': ['wp_Annex'],
-  ' Entrance': ['wp_Entrance'],
+  'Entrance': ['wp_Entrance']
 };
-
-// You can edit `initialGraphNodes` to add new waypoint nodes and the
-// initializer above will automatically add example edges between the listed
-// nodes. For a production pedestrian graph, prefer hand-curated waypoint
-// lists and explicit edges (both directions) to match sidewalks and crossings.
-
-// Ordered list of waypoint keys. Use this to render stable numeric IDs on the
-// map (1..N). Keep the order intentional: change this list when you add new
-// waypoints to preserve predictable numbering used in the UI.
 final List<String> initialGraphNodeKeys = [
-  // Main building waypoints (ordered for stable numeric IDs)
   'wp_Entrance',
-  'wp_Red_Bldg', 
+  'wp_Red_Bldg',
   'wp_SMH_Hall',
   'wp_SFJ',
   'wp_STL',
@@ -303,7 +279,6 @@ final List<String> initialGraphNodeKeys = [
   'wp_Covered_Court',
   'wp_IH_Gym',
   'wp_Annex',
-  // Pathway waypoints (numbered)
   'wp_1', 'wp_2', 'wp_3', 'wp_4', 'wp_5', 'wp_6', 'wp_7', 'wp_8', 'wp_9', 'wp_10',
   'wp_11', 'wp_12', 'wp_13', 'wp_14', 'wp_15', 'wp_16', 'wp_17', 'wp_18', 'wp_19', 'wp_20',
   'wp_21', 'wp_22', 'wp_23', 'wp_24', 'wp_25', 'wp_26', 'wp_27', 'wp_28', 'wp_29', 'wp_30',

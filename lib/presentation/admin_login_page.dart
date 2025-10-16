@@ -3,7 +3,7 @@ import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/presentation/map_page.dart';
 import 'package:hau_navigation_app/widgets/custom_app_bar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hau_navigation_app/auth/auth_service.dart';
+import 'package:hau_navigation_app/supabase_services/auth_service.dart';
 
 class AdminLoginPage extends StatefulWidget {
   const AdminLoginPage({super.key});
@@ -26,7 +26,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     final email = _emailController.text.trim();
     final password = _idController.text.trim();
 
-    //Empty field validation
     if (email.isEmpty || password.isEmpty) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -35,7 +34,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       return;
     }
 
-    //Domain validation
     final allowedDomains = ['@gmail.com', '@hau.edu.ph'];
     final isValidEmail = allowedDomains.any((domain) => email.endsWith(domain));
 
@@ -51,25 +49,21 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     }
 
     try {
-      //Attempt login
       final response =
           await _authService.signInWithEmailPassword(email, password);
 
       if (response.user != null) {
-        // Success
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MapPage(isAdmin: true)),
         );
       } else {
-        //No user returned — invalid credentials
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Invalid email or password. Please try again.')),
         );
       }
     } on AuthException catch (e) {
-      //Specific Supabase auth errors (if your AuthService throws AuthException)
       String errorMessage = 'Login failed. Please try again.';
 
       if (e.message.contains('Invalid login credentials')) {
@@ -84,7 +78,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         SnackBar(content: Text(errorMessage)),
       );
     } catch (e) {
-      //Catch-all for anything else
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unexpected error: ${e.toString()}')),
       );
@@ -117,7 +110,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Red container with form
                   Container(
                     padding: const EdgeInsets.all(30.0),
                     decoration: BoxDecoration(
@@ -134,7 +126,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Title
                         Text(
                           'Enter your Institutional email:',
                           style: TextStyle(
@@ -144,7 +135,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         ),
                         const SizedBox(height: 10),
 
-                        // Email field
                         TextField(
                           controller: _emailController,
                           decoration: InputDecoration(
@@ -163,7 +153,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         ),
                         const SizedBox(height: 20),
 
-                        // ID title
                         Text(
                           'Enter your employee id:',
                           style: TextStyle(
@@ -173,7 +162,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         ),
                         const SizedBox(height: 10),
 
-                        // ID field
                         TextField(
                           controller: _idController,
                           decoration: InputDecoration(
@@ -192,7 +180,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         ),
                         const SizedBox(height: 30),
 
-                        // Login button
                         SizedBox(
                           width: 200,
                           height: 50,

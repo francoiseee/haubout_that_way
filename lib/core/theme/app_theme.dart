@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Color constants
   static const Color primaryRed = Color(0xFF710E1D);
   static const Color primaryYellow = Color(0xFFFFCC02);
   static const Color textWhite = Colors.white;
   static const Color textBlack = Colors.black;
   
-  // Gradient constants
   static const LinearGradient blackGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
@@ -21,7 +19,6 @@ class AppTheme {
   );
   
 
-  // Theme data
   static ThemeData get lightTheme {
     return ThemeData(
       primarySwatch: _createMaterialColor(primaryRed),
@@ -43,18 +40,18 @@ class AppTheme {
         elevation: 0,
       ),
       dialogTheme: const DialogThemeData(
-        backgroundColor: Colors.white,  // Change this to your desired color
+        backgroundColor: Colors.white,  
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
         titleTextStyle: TextStyle(
-          color: Colors.black,  // White text for title
+          color: Colors.black,  
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
         contentTextStyle: TextStyle(
-          color: Colors.black,  // White text for content
+          color: Colors.black,  
           fontSize: 14,
         ),
       ),
@@ -68,7 +65,6 @@ class AppTheme {
     );
   }
 
-  // Helper method to create MaterialColor from custom color
   static MaterialColor _createMaterialColor(Color color) {
     List strengths = <double>[.05];
     final swatch = <int, Color>{};
@@ -133,8 +129,8 @@ class AppTheme {
   static TextButtonThemeData _buildTextButtonTheme() {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: Colors.black,  // Cancel button text color
-        backgroundColor: Colors.transparent,  // Transparent background
+        foregroundColor: Colors.black,  
+        backgroundColor: Colors.transparent,  
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -149,10 +145,8 @@ class AppTheme {
 
   static InputDecorationTheme _buildInputDecorationTheme() {
     return InputDecorationTheme(
-      // Text color inside the input field
       hintStyle: const TextStyle(color: Colors.grey),
       labelStyle: const TextStyle(color: Colors.black),
-      // Border styling
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Colors.black),
@@ -165,7 +159,6 @@ class AppTheme {
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: primaryYellow, width: 2),
       ),
-      // Background and text colors
       filled: true,
       fillColor: Colors.grey[100],
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

@@ -66,10 +66,10 @@ class _HomePageState extends State<HomePage> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            AppTheme.primaryRed, // Your primary red at top
-            Colors.black,        // Black at bottom
+            AppTheme.primaryRed,
+            Colors.black,
           ],
-          stops: [0.3, 1.0], // Adjust fade position
+          stops: [0.3, 1.0],
         ),
       ),
       child: _buildBody(context, model),
@@ -91,32 +91,22 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
-            // HAU Logo Section
             _buildLogoSection(),
             
-            // Welcome Text Section
             _buildWelcomeTextSection(context),
             
-            // Spacer to push button to bottom
             const Expanded(child: SizedBox()),
             
-            // Start Button Section
             _buildStartButtonSection(model),
             
-            // Error Message Section
             if (model.errorMessage != null) _buildErrorSection(model),
             
-            // Bottom spacing
             const SizedBox(height: 50),
           ],
         ),
       ),
     );
   }
-
-  // ===========================================
-  // UI COMPONENT SECTIONS
-  // ===========================================
 
   Widget _buildLogoSection() {
     return const Padding(
@@ -131,7 +121,6 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Welcome title
           Padding(
             padding: const EdgeInsets.only(bottom: 20.0),
             child: Text(
@@ -141,7 +130,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           
-          // App description
           Text(
             'Your ultimate guide to exploring Holy Angel University with ease. '
             'Find the quickest routes to classrooms, offices, and campus spots—'

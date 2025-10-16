@@ -29,7 +29,6 @@ class VisitorAdminPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [              
-                  // Visitor Button
                   _buildOptionButton(
                     text: 'Visitor',
                     onPressed: () {
@@ -40,7 +39,6 @@ class VisitorAdminPage extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 20),
-                  // Admin Button
                   _buildOptionButton(
                     text: 'Admin',
                     onPressed: () {

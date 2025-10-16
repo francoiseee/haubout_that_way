@@ -1,4 +1,3 @@
-// widgets/hau_logo.dart
 import 'package:flutter/material.dart';
 
 class HauLogoWidget extends StatelessWidget {
