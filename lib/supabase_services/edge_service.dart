@@ -13,4 +13,74 @@ class EdgeService {
 
     return data.map((item) => Edge.fromMap(item as Map<String, dynamic>)).toList();
   }
+
+  /// Update edge distance between two waypoints. Returns true on success.
+  Future<bool> updateEdge({required String from, required String to, required double distanceMeters}) async {
+    try {
+      await SupabaseService.client
+          .from('edges')
+          .update({'distance_meters': distanceMeters})
+          .eq('from_waypoint', from)
+          .eq('to_waypoint', to);
+      return true;
+    } catch (e) {
+      print('Error updating edge: $e');
+      return false;
+    }
+  }
+
+  /// Update the endpoints of an edge (from_waypoint/to_waypoint).
+  /// This updates the row matching originalFrom/originalTo to have newFrom/newTo.
+  Future<bool> updateEdgeEndpoints({
+    required String originalFrom,
+    required String originalTo,
+    required String newFrom,
+    required String newTo,
+  }) async {
+    try {
+      await SupabaseService.client
+          .from('edges')
+          .update({'from_waypoint': newFrom, 'to_waypoint': newTo})
+          .eq('from_waypoint', originalFrom)
+          .eq('to_waypoint', originalTo);
+      return true;
+    } catch (e) {
+      print('Error updating edge endpoints: $e');
+      return false;
+    }
+  }
+
+  /// Delete an edge (connection) by its endpoints. Returns true on success.
+  Future<bool> deleteEdge({required String from, required String to}) async {
+    try {
+      await SupabaseService.client
+          .from('edges')
+          .delete()
+          .eq('from_waypoint', from)
+          .eq('to_waypoint', to);
+      return true;
+    } catch (e) {
+      print('Error deleting edge: $e');
+      return false;
+    }
+  }
+
+  /// Create a new edge (connection) between two waypoints. Returns true on success.
+  Future<bool> createEdge({required String from, required String to, double? distanceMeters}) async {
+    try {
+      final Map<String, dynamic> row = {
+        'from_waypoint': from,
+        'to_waypoint': to,
+      };
+      if (distanceMeters != null) row['distance_meters'] = distanceMeters;
+
+      await SupabaseService.client
+          .from('edges')
+          .insert(row);
+      return true;
+    } catch (e) {
+      print('Error creating edge: $e');
+      return false;
+    }
+  }
 }

@@ -10,11 +10,20 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
 import 'package:hau_navigation_app/presentation/building_detail_page.dart';
+import 'package:hau_navigation_app/presentation/admin_buildings_update_page.dart';
+import 'package:hau_navigation_app/presentation/admin_buildings_read_page.dart';
+import 'package:hau_navigation_app/presentation/admin_buildings_delete_page.dart';
 import 'package:hau_navigation_app/widgets/custom_app_bar.dart';
 import 'package:hau_navigation_app/viewmodels/campus_route_viewmodel.dart';
 import 'package:hau_navigation_app/models/campus_route.dart';
 import 'package:hau_navigation_app/supabase_services/waypoint_service.dart';
 import 'package:hau_navigation_app/supabase_services/edge_service.dart';
+import 'package:hau_navigation_app/presentation/admin_connections_update_page.dart';
+import 'package:hau_navigation_app/presentation/admin_connections_read_page.dart';
+import 'package:hau_navigation_app/presentation/admin_connections_delete_page.dart';
+import 'package:hau_navigation_app/presentation/admin_waypoints_update_page.dart';
+import 'package:hau_navigation_app/presentation/admin_waypoints_read_page.dart';
+import 'package:hau_navigation_app/presentation/admin_waypoints_delete_page.dart';
 import 'package:hau_navigation_app/data/waypoints.dart' as wpdata;
 
 class MapPage extends StatefulWidget {
@@ -1214,15 +1223,187 @@ class _MapPageState extends State<MapPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                // First row: Create | Read
                                 Row(
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(
-                                                context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text(
-                                                    'Create building: not implemented'))),
+                                        onPressed: () async {
+                                          final nameController = TextEditingController();
+                                          final infoController = TextEditingController();
+                                          final photoController = TextEditingController();
+
+                                          final created = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => StatefulBuilder(builder: (context, setState) {
+                                              final List<String> offices = [];
+                                              final List<String> classrooms = [];
+                                              final TextEditingController officeInput = TextEditingController();
+                                              final TextEditingController classInput = TextEditingController();
+
+                                              Widget buildChips(List<String> items) {
+                                                return Wrap(
+                                                  spacing: 6,
+                                                  runSpacing: 6,
+                                                  children: items
+                                                      .map((it) => Chip(
+                                                            label: Text(it, style: const TextStyle(color: Colors.black)),
+                                                            onDeleted: () {
+                                                              setState(() => items.remove(it));
+                                                            },
+                                                          ))
+                                                      .toList(),
+                                                );
+                                              }
+
+                                              return AlertDialog(
+                                                title: const Text('Create building'),
+                                                content: SingleChildScrollView(
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      TextField(
+                                                        controller: nameController,
+                                                        style: const TextStyle(color: Colors.black),
+                                                        decoration: const InputDecoration(labelText: 'Building name'),
+                                                      ),
+                                                      const SizedBox(height: 12),
+                                                      TextField(
+                                                        controller: infoController,
+                                                        style: const TextStyle(color: Colors.black),
+                                                        decoration: const InputDecoration(labelText: 'Building information'),
+                                                        maxLines: 3,
+                                                      ),
+                                                      const SizedBox(height: 12),
+                                                      TextField(
+                                                        controller: photoController,
+                                                        style: const TextStyle(color: Colors.black),
+                                                        decoration: const InputDecoration(labelText: 'Photo URL or asset path'),
+                                                      ),
+                                                      const SizedBox(height: 12),
+                                                      // Offices input (stacked with a thin right-aligned Add button)
+                                                      TextField(
+                                                        controller: officeInput,
+                                                        style: const TextStyle(color: Colors.black),
+                                                        decoration: const InputDecoration(labelText: 'Add office / room'),
+                                                      ),
+                                                      const SizedBox(height: 6),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: ElevatedButton(
+                                                              style: ElevatedButton.styleFrom(
+                                                                minimumSize: const Size.fromHeight(40),
+                                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: const BorderSide(color: Colors.black, width: 1)),
+                                                                backgroundColor: AppTheme.primaryYellow,
+                                                                foregroundColor: AppTheme.textBlack,
+                                                                elevation: 0,
+                                                              ),
+                                                              onPressed: () {
+                                                                final val = officeInput.text.trim();
+                                                                if (val.isNotEmpty) {
+                                                                  setState(() {
+                                                                    offices.add(val);
+                                                                    officeInput.clear();
+                                                                  });
+                                                                }
+                                                              },
+                                                              child: const Text('ADD OFFICE', 
+                                                              style: TextStyle(
+                                                                color: Colors.black,
+                                                                fontSize: 10,
+                                                              )),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      if (offices.isNotEmpty) buildChips(offices),
+                                                      const SizedBox(height: 12),
+                                                      // Classrooms input (stacked with a thin right-aligned Add button)
+                                                      TextField(
+                                                        controller: classInput,
+                                                        style: const TextStyle(color: Colors.black),
+                                                        decoration: const InputDecoration(labelText: 'Add classroom'),
+                                                      ),
+                                                      const SizedBox(height: 6),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: ElevatedButton(
+                                                              style: ElevatedButton.styleFrom(
+                                                                minimumSize: const Size.fromHeight(40),
+                                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: const BorderSide(color: Colors.black, width: 1)),
+                                                                backgroundColor: AppTheme.primaryYellow,
+                                                                foregroundColor: AppTheme.textBlack,
+                                                                elevation: 0,
+                                                              ),
+                                                              onPressed: () {
+                                                                final val = classInput.text.trim();
+                                                                if (val.isNotEmpty) {
+                                                                  setState(() {
+                                                                    classrooms.add(val);
+                                                                    classInput.clear();
+                                                                  });
+                                                                }
+                                                              },
+                                                              child: const Text('ADD CLASSROOM',
+                                                                style: TextStyle(
+                                                                  color: Colors.black,
+                                                                  fontSize: 10,
+                                                                )),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      if (classrooms.isNotEmpty) buildChips(classrooms),
+                                                    ],
+                                                  ),
+                                                ),
+                                                actions: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                    children: [
+                                                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                                                      const SizedBox(width: 8),
+                                                      ElevatedButton(onPressed: () {
+                                                        final name = nameController.text.trim();
+                                                        final info = infoController.text.trim();
+                                                        final photo = photoController.text.trim();
+                                                        if (name.isEmpty) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Building name is required')));
+                                                          return;
+                                                        }
+
+                                                        // Append new building to the in-memory list
+                                                        setState(() {
+                                                          _buildings.add({
+                                                            'name': name,
+                                                            'offices': [...offices, ...classrooms],
+                                                            'info': info,
+                                                            'photo': photo,
+                                                          });
+                                                        });
+
+                                                        Navigator.pop(context, true);
+                                                      }, child: const Text('CREATE',
+                                                      style: TextStyle(fontSize: 20),)),
+                                                    ],
+                                                  ),
+                                                ],
+                                              );
+                                            }),
+                                          );
+
+                                          if (created == true) {
+                                            // refresh UI and close admin sheet
+                                            setState(() {});
+                                            try { Navigator.pop(context); } catch (_) {}
+                                          }
+                                        },
                                         icon: const Icon(Icons.add),
                                         label: const Text('Create',
                                             style: TextStyle(fontSize: 19)),
@@ -1231,33 +1412,116 @@ class _MapPageState extends State<MapPage> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(
-                                                context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text(
-                                                    'Update building: not implemented'))),
-                                        icon: const Icon(Icons.edit),
-                                        label: const Text('Update',
+                                        onPressed: () async {
+                                          // Close admin sheet, then open dedicated Read page
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          // Open the dedicated AdminBuildingsUpdatePage and await a navigation request result
+                                          final result = await Navigator.push<String?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminBuildingsReadPage(
+                                                buildings: _buildings,
+                                                isAdmin: widget.isAdmin,
+                                              ),
+                                            ),
+                                          );
+
+                                          // If the read page returned a building name (START NAVIGATION),
+                                          // handle it the same as when BuildingDetailPage returns.
+                                          if (result is String && result.isNotEmpty) {
+                                            setState(() {
+                                              _isNavigating = true;
+                                              try {
+                                                context.read<CampusRouteViewModel>().clearSelection();
+                                              } catch (_) {}
+                                            });
+                                            _computePathFromCurrentTo(result);
+                                          }
+                                        },
+                                        icon: const Icon(Icons.visibility),
+                                        label: const Text('Read',
                                             style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.redAccent),
-                                    onPressed: () => ScaffoldMessenger.of(
-                                            context)
-                                        .showSnackBar(const SnackBar(
-                                            content: Text(
-                                                'Delete building: not implemented'))),
-                                    icon: const Icon(Icons.delete),
-                                    label: const Text('Delete',
-                                        style: TextStyle(fontSize: 19)),
-                                  ),
+                                // Second row: Update | Delete
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          // Close admin sheet, then reuse the Read page as the Update entrypoint
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          final result = await Navigator.push<String?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminBuildingsUpdatePage(
+                                                buildings: _buildings,
+                                                isAdmin: widget.isAdmin,
+                                                // The read page is the starting point for update flows as well
+                                              ),
+                                            ),
+                                          );
+
+                                          if (result is String && result.isNotEmpty) {
+                                            setState(() {
+                                              _isNavigating = true;
+                                              try {
+                                                context.read<CampusRouteViewModel>().clearSelection();
+                                              } catch (_) {}
+                                            });
+                                            _computePathFromCurrentTo(result);
+                                          }
+                                        },
+                                        icon: const Icon(Icons.edit),
+                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.redAccent),
+                                        onPressed: () async {
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          final result = await Navigator.push<String?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminBuildingsDeletePage(buildings: _buildings),
+                                            ),
+                                          );
+
+                                          if (result is String && result.isNotEmpty) {
+                                            // If a building name was returned (deleted), attempt to treat it as a navigation target like the read pages do
+                                            setState(() {
+                                              _isNavigating = true;
+                                              try {
+                                                context.read<CampusRouteViewModel>().clearSelection();
+                                              } catch (_) {}
+                                            });
+                                            _computePathFromCurrentTo(result);
+                                          }
+                                        },
+                                        icon: const Icon(Icons.delete),
+                                        label: const Text('Delete',
+                                            style: TextStyle(fontSize: 19)),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -1284,15 +1548,77 @@ class _MapPageState extends State<MapPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                // First row: Create | Read
                                 Row(
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(
-                                                context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text(
-                                                    'Create waypoint: not implemented'))),
+                                        onPressed: () async {
+                                          // Show create dialog with empty fields
+                                          final controllerKey = TextEditingController();
+                                          final controllerLat = TextEditingController();
+                                          final controllerLng = TextEditingController();
+
+                                          final created = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text('Create waypoint'),
+                                              content: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  TextField(
+                                                    controller: controllerKey,
+                                                    style: const TextStyle(color: Colors.black),
+                                                    decoration: const InputDecoration(labelText: 'Waypoint key'),
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  TextField(
+                                                    controller: controllerLat,
+                                                    style: const TextStyle(color: Colors.black),
+                                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                                    decoration: const InputDecoration(labelText: 'Latitude'),
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  TextField(
+                                                    controller: controllerLng,
+                                                    style: const TextStyle(color: Colors.black),
+                                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                                    decoration: const InputDecoration(labelText: 'Longitude'),
+                                                  ),
+                                                ],
+                                              ),
+                                              actions: [
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                                                    const SizedBox(width: 8),
+                                                    ElevatedButton(onPressed: () async {
+                                                      final key = controllerKey.text.trim();
+                                                      final lat = double.tryParse(controllerLat.text.trim());
+                                                      final lng = double.tryParse(controllerLng.text.trim());
+                                                      if (key.isEmpty || lat == null || lng == null) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid input')));
+                                                        return;
+                                                      }
+
+                                                      final ok = await WaypointService().createWaypoint(waypointKey: key, latitude: lat, longitude: lng);
+                                                      if (ok) Navigator.pop(context, true);
+                                                      else ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to create waypoint')));
+                                                    }, child: const Text('CREATE',
+                                                      style: TextStyle(fontSize: 20),)),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          );
+
+                                          if (created == true) {
+                                            _initializeGraphData();
+                                            // close admin sheet (if still open)
+                                            try { Navigator.pop(context); } catch (_) {}
+                                          }
+                                        },
                                         icon: const Icon(Icons.add_location),
                                         label: const Text('Create',
                                             style: TextStyle(fontSize: 19)),
@@ -1301,33 +1627,91 @@ class _MapPageState extends State<MapPage> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(
-                                                context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text(
-                                                    'Update waypoint: not implemented'))),
-                                        icon: const Icon(Icons.edit_location),
-                                        label: const Text('Update',
+                                        onPressed: () async {
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          // Open the dedicated waypoints update page and pass the current graph nodes
+                                          final changed = await Navigator.push<bool?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminWaypointsReadPage(
+                                                waypoints: _graphNodes,
+                                              ),
+                                            ),
+                                          );
+
+                                          if (changed == true) {
+                                            // Re-fetch waypoints from database
+                                            _initializeGraphData();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.visibility),
+                                        label: const Text('Read',
                                             style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.redAccent),
-                                    onPressed: () => ScaffoldMessenger.of(
-                                            context)
-                                        .showSnackBar(const SnackBar(
-                                            content: Text(
-                                                'Delete waypoint: not implemented'))),
-                                    icon: const Icon(Icons.delete),
-                                    label: const Text('Delete',
-                                        style: TextStyle(fontSize: 19)),
-                                  ),
+                                // Second row: Update | Delete
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          final changed = await Navigator.push<bool?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminWaypointsUpdatePage(
+                                                waypoints: _graphNodes,
+                                              ),
+                                            ),
+                                          );
+
+                                          if (changed == true) {
+                                            _initializeGraphData();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.edit_location),
+                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.redAccent),
+                                        onPressed: () async {
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          final changed = await Navigator.push<bool?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminWaypointsDeletePage(waypoints: _graphNodes),
+                                            ),
+                                          );
+
+                                          if (changed == true) {
+                                            _initializeGraphData();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.delete),
+                                        label: const Text('Delete',
+                                            style: TextStyle(fontSize: 19)),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -1354,15 +1738,167 @@ class _MapPageState extends State<MapPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                // First row: Create | Read
                                 Row(
                                   children: [
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(
-                                                context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text(
-                                                    'Create connection: not implemented'))),
+                                        onPressed: () async {
+                                          // Create connection dialog (empty values)
+                                          String fromSel = '';
+                                          String toSel = '';
+
+                                          Future<String?> _chooser(BuildContext ctx, String initial) async {
+                                            final TextEditingController _search = TextEditingController();
+                                            final wps = await WaypointService().fetchWaypoints();
+                                            final List<String> options = wps.map((w) => w.waypointKey).toList()..sort();
+                                            List<String> filtered = List.from(options);
+
+                                            return showDialog<String>(
+                                              context: ctx,
+                                              builder: (context) {
+                                                return StatefulBuilder(builder: (context, setState) {
+                                                  return AlertDialog(
+                                                    title: const Text('Select waypoint'),
+                                                    content: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        TextField(
+                                                          controller: _search,
+                                                          style: const TextStyle(color: Colors.black),
+                                                          cursorColor: Colors.black,
+                                                          decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search...'),
+                                                          onChanged: (v) {
+                                                            final q = v.toLowerCase();
+                                                            setState(() {
+                                                              filtered = options.where((o) => o.toLowerCase().contains(q)).toList();
+                                                            });
+                                                          },
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        SizedBox(
+                                                          width: double.maxFinite,
+                                                          height: 240,
+                                                          child: ListView.builder(
+                                                            itemCount: filtered.length,
+                                                            itemBuilder: (context, i) => Container(
+                                                              margin: const EdgeInsets.symmetric(vertical: 4),
+                                                              decoration: BoxDecoration(
+                                                                border: Border.all(color: Colors.grey.shade300),
+                                                                borderRadius: BorderRadius.circular(6),
+                                                                color: Colors.white,
+                                                              ),
+                                                              child: ListTile(
+                                                                title: Text(filtered[i]),
+                                                                onTap: () => Navigator.pop(context, filtered[i]),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    actions: [TextButton(onPressed: () => Navigator.pop(context, null), child: const Text('CANCEL'))],
+                                                  );
+                                                });
+                                              },
+                                            );
+                                          }
+
+                                          final created = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => StatefulBuilder(builder: (context, setState) {
+                                              Widget buildPickerRow({required String label, required String value, required VoidCallback onTap, required IconData icon}) {
+                                                return InkWell(
+                                                  onTap: onTap,
+                                                  child: Container(
+                                                    height: 56,
+                                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                                    decoration: BoxDecoration(
+                                                      border: Border.all(color: Colors.grey.shade300),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      color: Colors.white,
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(icon, color: Colors.grey[700]),
+                                                        const SizedBox(width: 12),
+                                                        Expanded(
+                                                          child: Column(
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                                              const SizedBox(height: 2),
+                                                              Text(value.isEmpty ? '(select)' : value, style: const TextStyle(color: Colors.black, fontSize: 14), overflow: TextOverflow.ellipsis),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Icon(Icons.arrow_drop_down, color: Colors.grey[700]),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+
+                                              return AlertDialog(
+                                                title: const Text('Create connection'),
+                                                content: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    buildPickerRow(
+                                                      label: 'From',
+                                                      value: fromSel,
+                                                      icon: Icons.travel_explore,
+                                                      onTap: () async {
+                                                        final pick = await _chooser(context, fromSel);
+                                                        if (pick != null) setState(() => fromSel = pick);
+                                                      },
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    buildPickerRow(
+                                                      label: 'To',
+                                                      value: toSel,
+                                                      icon: Icons.place,
+                                                      onTap: () async {
+                                                        final pick = await _chooser(context, toSel);
+                                                        if (pick != null) setState(() => toSel = pick);
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                                actions: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                    children: [
+                                                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                                                      const SizedBox(width: 8),
+                                                      ElevatedButton(onPressed: () async {
+                                                        if (fromSel.isEmpty || toSel.isEmpty) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both From and To waypoints')));
+                                                          return;
+                                                        }
+                                                        if (fromSel == toSel) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('From and To cannot be the same waypoint')));
+                                                          return;
+                                                        }
+
+                                                        final ok = await EdgeService().createEdge(from: fromSel, to: toSel);
+                                                        if (ok) Navigator.pop(context, true);
+                                                        else ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to create connection')));
+                                                      }, child: const Text('CREATE',
+                                                        style: TextStyle(fontSize: 20),)),
+                                                    ],
+                                                  ),
+                                                ],
+                                              );
+                                            }),
+                                          );
+
+                                          if (created == true) {
+                                            _initializeGraphData();
+                                            try { Navigator.pop(context); } catch (_) {}
+                                          }
+                                        },
                                         icon: const Icon(Icons.link),
                                         label: const Text('Create',
                                             style: TextStyle(fontSize: 19)),
@@ -1371,33 +1907,89 @@ class _MapPageState extends State<MapPage> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => ScaffoldMessenger.of(
-                                                context)
-                                            .showSnackBar(const SnackBar(
-                                                content: Text(
-                                                    'Update connection: not implemented'))),
-                                        icon: const Icon(Icons.swap_horiz),
-                                        label: const Text('Update',
+                                        onPressed: () async {
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          // Open connections update page with current edges
+                                          final edges = await EdgeService().fetchEdges();
+                                          final changed = await Navigator.push<bool?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminConnectionsReadPage(connections: edges),
+                                            ),
+                                          );
+
+                                          if (changed == true) {
+                                            _initializeGraphData();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.visibility),
+                                        label: const Text('Read',
                                             style: TextStyle(fontSize: 19)),
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.redAccent),
-                                    onPressed: () => ScaffoldMessenger.of(
-                                            context)
-                                        .showSnackBar(const SnackBar(
-                                            content: Text(
-                                                'Delete connection: not implemented'))),
-                                    icon: const Icon(Icons.link_off),
-                                    label: const Text('Delete',
-                                        style: TextStyle(fontSize: 19)),
-                                  ),
+                                // Second row: Update | Delete
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          final edges = await EdgeService().fetchEdges();
+                                          final changed = await Navigator.push<bool?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminConnectionsUpdatePage(connections: edges),
+                                            ),
+                                          );
+
+                                          if (changed == true) {
+                                            _initializeGraphData();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.swap_horiz),
+                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.redAccent),
+                                        onPressed: () async {
+                                          try {
+                                            Navigator.pop(context);
+                                          } catch (_) {}
+                                          await Future.delayed(const Duration(milliseconds: 150));
+
+                                          final edges = await EdgeService().fetchEdges();
+                                          final changed = await Navigator.push<bool?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AdminConnectionsDeletePage(connections: edges),
+                                            ),
+                                          );
+
+                                          if (changed == true) {
+                                            _initializeGraphData();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.link_off),
+                                        label: const Text('Delete',
+                                            style: TextStyle(fontSize: 19)),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
