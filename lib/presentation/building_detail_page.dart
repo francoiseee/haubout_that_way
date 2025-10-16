@@ -115,6 +115,7 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
 
   String _photoFor(String name) {
     final key = name.trim().toLowerCase();
+    debugPrint('Looking up photo for building name: "$name" (key: "$key")');
     const map = {
       'entrance': 'assets/building_actualpic/entrance.png',
       'st. joseph hall building (sjh)': 'assets/building_actualpic/sjh.png',
@@ -142,6 +143,10 @@ class _BuildingDetailPageState extends State<BuildingDetailPage> {
       'immaculate heart gymnasium annex':
           'assets/building_actualpic/gym_annex.png',
       'yellow food court': 'assets/building_actualpic/yellowcanteen.png',
+      'archbishop pedro santos building (aps)': 'assets/building_actualpic/aps2.png',
+      'sister josefina nepomuceno formation center':'assets/building_actualpic/formation.png',
+      'st. michael hall building (smh)':'assets/building_actualpic/smh.png',
+      'st. raphael hall building (srh)':'assets/building_actualpic/srh.png'
     };
     return map[key] ?? 'assets/building_actualpic/main-entrance.jpg';
   }
