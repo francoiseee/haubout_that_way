@@ -13,13 +13,13 @@ class OfficeService {
 
   Future<List<Office>> fetchOfficesByBuildingCode(String buildingCode) async {
   final response = await SupabaseService.client
-      .from('offices')
-      .select()
-      .eq('building_code', buildingCode);
+    .from('offices')
+    .select()
+    .eq('building_code', buildingCode) as List<dynamic>;
 
-  if (response == null || (response is List && response.isEmpty)) return [];
+  if (response.isEmpty) return [];
 
-  final data = (response as List).cast<Map<String, dynamic>>();
+  final data = response.cast<Map<String, dynamic>>();
 
   return data.map((item) => Office.fromMap(item)).toList();
   }

@@ -90,28 +90,31 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
       backgroundColor: AppTheme.primaryRed,
       appBar: const CustomAppBar(),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/campus.jpg'),
-            fit: BoxFit.cover,
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/campus.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
-        ),
-        child: Container(
-          color: Colors.black.withOpacity(0.5),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(30.0),
+          Container(color: Colors.black.withOpacity(0.5)),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Container(
+                    padding: const EdgeInsets.all(24.0),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryRed,
                       borderRadius: BorderRadius.circular(20),
@@ -125,16 +128,16 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
                           'Enter your Institutional email:',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                           ),
                         ),
                         const SizedBox(height: 10),
-
                         TextField(
                           controller: _emailController,
                           decoration: InputDecoration(
@@ -152,16 +155,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                           keyboardType: TextInputType.emailAddress,
                         ),
                         const SizedBox(height: 20),
-
                         Text(
                           'Enter your employee id:',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                           ),
                         ),
                         const SizedBox(height: 10),
-
                         TextField(
                           controller: _idController,
                           decoration: InputDecoration(
@@ -178,10 +179,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                           style: const TextStyle(color: Colors.black),
                           obscureText: true,
                         ),
-                        const SizedBox(height: 30),
-
+                        const SizedBox(height: 24),
                         SizedBox(
-                          width: 200,
                           height: 50,
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _handleLogin,
@@ -216,11 +215,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

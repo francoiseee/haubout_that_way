@@ -85,26 +85,28 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    return SingleChildScrollView(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height,
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            _buildLogoSection(),
-            
-            _buildWelcomeTextSection(context),
-            
-            const Expanded(child: SizedBox()),
-            
-            _buildStartButtonSection(model),
-            
-            if (model.errorMessage != null) _buildErrorSection(model),
-            
-            const SizedBox(height: 50),
-          ],
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildLogoSection(),
+                  _buildWelcomeTextSection(context),
+                  const Spacer(),
+                  _buildStartButtonSection(model),
+                  if (model.errorMessage != null) _buildErrorSection(model),
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -145,19 +147,29 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildStartButtonSection(StartModel model) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 50.0),
-      child: ElevatedButton(
-        onPressed: model.isLoading ? null : _handleStartButtonPress,
-        child: model.isLoading 
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-              ),
-            )
-          : const Text('Start'),
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 260),
+          child: SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              onPressed: model.isLoading ? null : _handleStartButtonPress,
+              child: model.isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Colors.black),
+                      ),
+                    )
+                  : const Text('Start'),
+            ),
+          ),
+        ),
       ),
     );
   }

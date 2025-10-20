@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:hau_navigation_app/core/theme/app_theme.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:hau_navigation_app/presentation/building_detail_page.dart';
 import 'package:hau_navigation_app/presentation/admin_buildings_update_page.dart';
 import 'package:hau_navigation_app/presentation/admin_buildings_read_page.dart';
@@ -43,6 +44,8 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<CompassEvent>? _compassStreamSubscription;
   double _currentHeading = 0.0;
   bool _isLocationEnabled = false;
+  bool _locationStreamStarted = false;
+  bool _locationInitInProgress = false;
   bool _isFollowingUser = false;
 
   final TextEditingController _routeSearchController = TextEditingController();
@@ -172,11 +175,24 @@ class _MapPageState extends State<MapPage> {
     },
   ];
 
+  // Ensures button labels don't overflow in narrow screens
+  Widget _responsiveLabel(String text) => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 16),
+        ),
+      );
+
   @override
   void initState() {
     super.initState();
-    _requestLocationPermission();
-    _initializeLocationTracking();
+    // Initialize location after the first frame so permission prompts don't race.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureLocationInitialized();
+    });
     _initializeCompassTracking();
     _initializeGraphData();
     _routeSearchController.addListener(() {
@@ -223,19 +239,8 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  Future<void> _requestLocationPermission() async {
-    final permission = await Permission.location.request();
-    if (permission.isGranted) {
-      setState(() {
-        _isLocationEnabled = true;
-      });
-    }
-  }
-
   Future<void> _initializeLocationTracking() async {
-    if (!await Geolocator.isLocationServiceEnabled()) {
-      return;
-    }
+    if (_locationStreamStarted) return;
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -292,21 +297,102 @@ class _MapPageState extends State<MapPage> {
         _maybeRecomputePathOnMove();
       }
     });
+    _locationStreamStarted = true;
+  }
+
+  Future<void> _ensureLocationInitialized() async {
+    if (_locationInitInProgress) return;
+    _locationInitInProgress = true;
+    final bool isWindows = !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+
+    try {
+      // 1) Services
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        debugPrint('Location services are disabled.');
+        if (mounted) {
+          final msg = isWindows
+              ? 'Windows location is off. Enable Settings > Privacy & security > Location, and turn on "Let desktop apps access your location".'
+              : 'Location services are disabled on this device.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(msg),
+              action: SnackBarAction(
+                label: 'Settings',
+                onPressed: () {
+                  Geolocator.openLocationSettings();
+                },
+              ),
+            ),
+          );
+        }
+        setState(() => _isLocationEnabled = false);
+        return;
+      }
+
+      // 2) Permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Location permission permanently denied.'),
+              action: SnackBarAction(
+                label: 'App Settings',
+                onPressed: () {
+                  openAppSettings();
+                },
+              ),
+            ),
+          );
+        }
+        setState(() => _isLocationEnabled = false);
+        return;
+      }
+      if (permission == LocationPermission.denied) {
+        setState(() => _isLocationEnabled = false);
+        return;
+      }
+
+      // 3) Start tracking
+      await _initializeLocationTracking();
+      // Get an initial fix so the button works immediately
+      try {
+        final pos = await Geolocator.getCurrentPosition();
+        if (mounted) {
+          setState(() {
+            _currentPosition = pos;
+            _isLocationEnabled = true;
+          });
+        }
+      } catch (_) {}
+    } finally {
+      _locationInitInProgress = false;
+    }
   }
 
   void _initializeCompassTracking() {
-    _compassStreamSubscription =
-        FlutterCompass.events?.listen((CompassEvent event) {
-      if (event.heading != null) {
-        setState(() {
-          _currentHeading = event.heading!;
-        });
+    // Compass may be unsupported on some platforms (e.g., Windows). Guard usage.
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
+      _compassStreamSubscription =
+          FlutterCompass.events?.listen((CompassEvent event) {
+        if (event.heading != null) {
+          setState(() {
+            _currentHeading = event.heading!;
+          });
 
-        if (_isFollowingUser) {
-          _mapController.rotate(-_currentHeading);
+          if (_isFollowingUser) {
+            _mapController.rotate(-_currentHeading);
+          }
         }
-      }
-    });
+      });
+    } else {
+      debugPrint('Compass not initialized on this platform.');
+    }
   }
 
   void _toggleLocationFollowing() {
@@ -315,23 +401,37 @@ class _MapPageState extends State<MapPage> {
     });
 
     if (_isFollowingUser) {
+      final bool isWindows = !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
       if (_currentPosition == null) {
-        setState(() {
-          _currentPosition = Position(
-            latitude: 15.1341371,
-            longitude: 120.5910619,
-            timestamp: DateTime.now(),
-            accuracy: 3.0,
-            altitude: 0.0,
-            altitudeAccuracy: 0.0,
-            heading: 0.0,
-            headingAccuracy: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            floor: null,
-            isMocked: false,
-          );
-        });
+        if (isWindows) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Location unavailable. On Windows, enable Settings > Privacy & security > Location, and allow desktop apps access your location.',
+                ),
+              ),
+            );
+          }
+          return;
+        } else {
+          setState(() {
+            _currentPosition = Position(
+              latitude: 15.1341371,
+              longitude: 120.5910619,
+              timestamp: DateTime.now(),
+              accuracy: 3.0,
+              altitude: 0.0,
+              altitudeAccuracy: 0.0,
+              heading: 0.0,
+              headingAccuracy: 0.0,
+              speed: 0.0,
+              speedAccuracy: 0.0,
+              floor: null,
+              isMocked: false,
+            );
+          });
+        }
       }
 
       _mapController.move(
@@ -555,8 +655,14 @@ class _MapPageState extends State<MapPage> {
                       ],
                     ),
                     child: IconButton(
-                      onPressed:
-                          _isLocationEnabled ? _toggleLocationFollowing : null,
+                      onPressed: () async {
+                        if (!_isLocationEnabled) {
+                          await _ensureLocationInitialized();
+                        }
+                        if (_isLocationEnabled) {
+                          _toggleLocationFollowing();
+                        }
+                      },
                       icon: Icon(
                         _isFollowingUser
                             ? Icons.gps_fixed
@@ -1179,8 +1285,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.add),
-                                        label: const Text('Create',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Create'),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -1213,8 +1318,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.visibility),
-                                        label: const Text('Read',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Read'),
                                       ),
                                     ),
                                   ],
@@ -1251,7 +1355,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.edit),
-                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Update'),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -1283,8 +1387,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.delete),
-                                        label: const Text('Delete',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Delete'),
                                       ),
                                     ),
                                   ],
@@ -1382,8 +1485,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.add_location),
-                                        label: const Text('Create',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Create'),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -1409,8 +1511,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.visibility),
-                                        label: const Text('Read',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Read'),
                                       ),
                                     ),
                                   ],
@@ -1440,7 +1541,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.edit_location),
-                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Update'),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -1466,8 +1567,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.delete),
-                                        label: const Text('Delete',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Delete'),
                                       ),
                                     ),
                                   ],
@@ -1656,8 +1756,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.link),
-                                        label: const Text('Create',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Create'),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -1682,8 +1781,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.visibility),
-                                        label: const Text('Read',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Read'),
                                       ),
                                     ),
                                   ],
@@ -1712,7 +1810,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.swap_horiz),
-                                        label: const Text('Update', style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Update'),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -1739,8 +1837,7 @@ class _MapPageState extends State<MapPage> {
                                           }
                                         },
                                         icon: const Icon(Icons.link_off),
-                                        label: const Text('Delete',
-                                            style: TextStyle(fontSize: 19)),
+                                        label: _responsiveLabel('Delete'),
                                       ),
                                     ),
                                   ],
@@ -1977,16 +2074,29 @@ class _MapPageState extends State<MapPage> {
     final waypoints = await WaypointService().fetchWaypoints();
     final edges = await EdgeService().fetchEdges();
 
-    setState(() {
-      for (var wp in waypoints) {
-        _graphNodes[wp.waypointKey] = LatLng(wp.latitude, wp.longitude);
-      }
+      setState(() {
+        for (var wp in waypoints) {
+          _graphNodes[wp.waypointKey] = LatLng(wp.latitude, wp.longitude);
+        }
 
-      for (var edge in edges) {
-        _graphEdges.putIfAbsent(edge.fromWaypoint, () => {});
-        _graphEdges[edge.fromWaypoint]![edge.toWaypoint] = edge.distanceMeters;
-      }
-    });
+        final dist = const Distance();
+        for (var edge in edges) {
+          final from = edge.fromWaypoint;
+          final to = edge.toWaypoint;
+          double d = edge.distanceMeters;
+          // If distance from backend is zero or suspicious, compute from coordinates
+          if (d <= 0 && _graphNodes.containsKey(from) && _graphNodes.containsKey(to)) {
+            d = dist.as(LengthUnit.Meter, _graphNodes[from]!, _graphNodes[to]!);
+          }
+
+          _graphEdges.putIfAbsent(from, () => {});
+          _graphEdges[from]![to] = d;
+
+          // Ensure the graph is undirected for routing
+          _graphEdges.putIfAbsent(to, () => {});
+          _graphEdges[to]![from] = d;
+        }
+      });
   }
 
   List<String> _dijkstra(String startNode, String targetNode) {
@@ -2083,10 +2193,6 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _computePathFromCurrentTo(String buildingName) {
-    if (_currentPosition == null) {
-      return;
-    }
-
     String targetNode = 'wp_Entrance';
     try {
       String normalizedName = buildingName.trim();
@@ -2104,12 +2210,39 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    final currentPos =
-        LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+    // Decide a reliable starting position
+    const LatLng campusCenter = LatLng(15.132896, 120.590068);
+    final LatLng campusEntrance = _graphNodes['wp_Entrance'] ?? campusCenter;
+  // Distance util no longer required now that we always respect device position.
+  final bool isWindows = !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+  final bool isWeb = kIsWeb;
+
+    LatLng currentPos;
+    if (_currentPosition != null) {
+      // Always respect device-reported location on all platforms.
+      final devicePos = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+      currentPos = devicePos;
+    } else {
+      if (isWindows || isWeb) {
+        if (mounted) {
+          final msg = isWindows
+              ? 'Location unavailable. On Windows, enable Settings > Privacy & security > Location, and allow desktop apps access your location.'
+              : 'Location unavailable in browser. Please allow location in site permissions and reload.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(msg)),
+          );
+        }
+        return;
+      } else {
+        currentPos = campusEntrance;
+      }
+    }
     String? nearestNodeToUser;
     double nearestDist = double.infinity;
 
     for (final entry in _graphNodes.entries) {
+      // Only consider graph waypoints, skip building label nodes
+      if (!entry.key.startsWith('wp_')) continue;
       final pos = entry.value;
       final d = Distance().as(LengthUnit.Meter, currentPos, pos);
       if (d < nearestDist) {
@@ -2123,12 +2256,25 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    debugPrint('Computing nearest path from $nearestNodeToUser to $targetNode');
-    final nodePath = _dijkstra(nearestNodeToUser, targetNode);
+  debugPrint('Computing nearest path from $nearestNodeToUser to $targetNode');
+  var nodePath = _dijkstra(nearestNodeToUser, targetNode);
 
     if (nodePath.isEmpty) {
-      debugPrint('No path found between $nearestNodeToUser and $targetNode');
-      return;
+      // Try again from campus entrance explicitly
+      if (_graphNodes.containsKey('wp_Entrance')) {
+        debugPrint('No path from $nearestNodeToUser, retrying from Entrance');
+        nodePath = _dijkstra('wp_Entrance', targetNode);
+        currentPos = campusEntrance;
+      }
+      if (nodePath.isEmpty) {
+        debugPrint('No path found between $nearestNodeToUser and $targetNode');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No route available. Please try another destination.')),
+          );
+        }
+        return;
+      }
     }
 
     final nodePositions = <LatLng>[];
@@ -2145,6 +2291,11 @@ class _MapPageState extends State<MapPage> {
       _computedPath = nodePositions;
       _currentNavigationTarget = buildingName;
     });
+
+    // Ensure the whole path from user to destination is visible
+    try {
+      _fitRouteOnMap(nodePositions);
+    } catch (_) {}
 
     debugPrint('Path computed with ${nodePositions.length} points');
   }

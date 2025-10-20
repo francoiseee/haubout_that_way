@@ -18,14 +18,13 @@ class BuildingService {
         .eq('name', name)
         .single();
 
-    if (data == null) return null;
-    return Building.fromMap(data as Map<String, dynamic>);
+    return Building.fromMap(data);
   }
 
   Future<void> updateBuildingDescription(String buildingId, String newDescription) async {
-  final response = await SupabaseService.client
-      .from('buildings')
-      .update({'description': newDescription})
-      .eq('building_id', buildingId);
-}
+  await SupabaseService.client
+    .from('buildings')
+    .update({'description': newDescription})
+    .eq('building_id', buildingId);
+  }
 }

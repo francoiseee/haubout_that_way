@@ -52,24 +52,30 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 else
                   const SizedBox(width: 48),
                 
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const HauLogoWidget(
-                      width: 40,
-                      height: 40,
-                      padding: EdgeInsets.zero,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const HauLogoWidget(
+                        width: 40,
+                        height: 40,
+                        padding: EdgeInsets.zero,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 
                 if (actions != null && actions!.isNotEmpty)
